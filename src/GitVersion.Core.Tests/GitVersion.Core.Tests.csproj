@@ -13,6 +13,10 @@
         <ProjectReference Include="..\GitVersion.Core\GitVersion.Core.csproj" />
         <ProjectReference Include="..\GitVersion.Output\GitVersion.Output.csproj" />
     </ItemGroup>
+    <ItemGroup Condition="'$(NCrunch)' == '1'">
+        <!--<ProjectReference Include="..\GitVersion.Testing\GitVersion.Testing.csproj" />-->
+        <ProjectReference Include="C:\Git\GitVersion\src\GitVersion.Testing\GitVersion.Testing.csproj" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     </ItemGroup>
