@@ -11,11 +11,7 @@ public static class ParticipantSanitizer
     /// PascalCase. Otherwise, the input is returned unchanged.</returns>
     public static string SanitizeParticipant(string participant)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(participant);
-        if (participant.EndsWith('/'))
-        {
-            throw new ArgumentException("The value cannot end with a folder separator ('/').", nameof(participant));
-        }
+        GuardAgainstInvalidParticipants(participant);
 
         var folderIndex = participant.IndexOf('/');
         if (folderIndex > -1)
@@ -29,6 +25,13 @@ public static class ParticipantSanitizer
         }
 
         return participant;
+    }
+
+    public static string RegexSanitizeParticipant(string participant)
+    {
+        GuardAgainstInvalidParticipants(participant);
+
+        return RegexReplacer.NonAlphanumericRegex().Replace(participant, "_");
     }
 
     private static string SplitOnFolderAndRecurseSuffix(int folderIndex, string input)
@@ -94,5 +97,14 @@ public static class ParticipantSanitizer
         }
 
         return sb.ToString();
+    }
+
+    private static void GuardAgainstInvalidParticipants(string participant)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(participant);
+        if (participant.EndsWith('/'))
+        {
+            throw new ArgumentException("The value cannot end with a folder separator ('/').", nameof(participant));
+        }
     }
 }
