@@ -97,7 +97,7 @@
         <Using Include="System.Environment" Alias="SysEnv"/>
     </ItemGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition=" '$(IsUnitTestProject)' == 'false' ">
         <None Include="../../docs/input/docs/img/package_icon.png" Pack="true" PackagePath="/"/>
         <None Include="../../build/nuspec/README.md" Pack="true" PackagePath="/"/>
     </ItemGroup>
