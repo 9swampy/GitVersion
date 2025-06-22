@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <DebugSymbols>true</DebugSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GitVersion.Core\GitVersion.Core.csproj" />
+    </ItemGroup>
+</Project>

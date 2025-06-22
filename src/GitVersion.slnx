@@ -30,6 +30,7 @@
   </Folder>
   <Project Path="GitVersion.App.Tests/GitVersion.App.Tests.csproj" />
   <Project Path="GitVersion.App/GitVersion.App.csproj" />
+  <Project Path="GitVersion.Core.Continuous.Tests/GitVersion.Core.Continuous.Tests.csproj" Id="723cb030-671e-41bd-abcb-a62f19464267" />
   <Project Path="GitVersion.Core.Tests/GitVersion.Core.Tests.csproj" />
   <Project Path="GitVersion.Core/GitVersion.Core.csproj" />
   <Project Path="GitVersion.MsBuild.Tests/GitVersion.MsBuild.Tests.csproj" />
