@@ -90,7 +90,7 @@ internal static class ConfigurationExtensions
 
         var effectiveBranchName = branchNameOverride ?? branchName;
         if (configuration.RegularExpression.IsNullOrWhiteSpace() || effectiveBranchName.IsNullOrEmpty()) return label;
-        var regex = RegexPatterns.Cache.GetOrAdd(configuration.RegularExpression);
+        var regex = RegexPatterns.GetOrAddCachedRegex(configuration.RegularExpression);
         var match = regex.Match(effectiveBranchName);
         if (!match.Success) return label;
         foreach (var groupName in regex.GetGroupNames())

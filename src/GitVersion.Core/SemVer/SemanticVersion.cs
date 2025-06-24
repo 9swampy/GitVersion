@@ -132,7 +132,7 @@ public class SemanticVersion : IFormattable, IComparable<SemanticVersion>, IEqua
     public static bool TryParse(string version, string? tagPrefixRegex,
         [NotNullWhen(true)] out SemanticVersion? semanticVersion, SemanticVersionFormat format = SemanticVersionFormat.Strict)
     {
-        var regex = RegexPatterns.Cache.GetOrAdd($"^({tagPrefixRegex})(?<version>.*)$");
+        var regex = RegexPatterns.GetOrAddCachedRegex($"^({tagPrefixRegex})(?<version>.*)$");
         var match = regex.Match(version);
 
         if (!match.Success)

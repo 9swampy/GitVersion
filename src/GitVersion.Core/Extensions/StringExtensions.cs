@@ -13,7 +13,7 @@ public static class StringExtensions
 
     public static string RegexReplace(this string input, string pattern, string replace)
     {
-        var regex = RegexPatterns.Cache.GetOrAdd(pattern);
+        var regex = RegexPatterns.GetOrAddCachedRegex(pattern);
         return regex.Replace(input, replace);
     }
 

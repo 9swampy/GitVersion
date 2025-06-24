@@ -5,9 +5,9 @@ namespace GitVersion.Core;
 
 internal static partial class RegexPatterns
 {
-    internal static readonly ConcurrentDictionary<string, Regex> Cache = new();
+    private static readonly ConcurrentDictionary<string, Regex> Cache = new();
 
-    public static Regex GetRegex(string pattern) => Cache.GetOrAdd(
+    public static Regex GetOrAddCachedRegex(string pattern) => Cache.GetOrAdd(
         pattern,
         _ => pattern switch
         {

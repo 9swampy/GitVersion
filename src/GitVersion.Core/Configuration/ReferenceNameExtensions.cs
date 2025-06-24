@@ -17,7 +17,7 @@ public static class ReferenceNameExtensions
                                               string? tagPrefix,
                                               SemanticVersionFormat format)
     {
-        var versionPatternRegex = RegexPatterns.Cache.GetOrAdd(GetVersionInBranchPattern(versionPatternPattern));
+        var versionPatternRegex = RegexPatterns.GetOrAddCachedRegex(GetVersionInBranchPattern(versionPatternPattern));
         result = default;
 
         var length = 0;

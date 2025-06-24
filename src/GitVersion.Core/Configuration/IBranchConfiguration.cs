@@ -29,7 +29,7 @@ public interface IBranchConfiguration
             return false;
         }
 
-        var regex = RegexPatterns.Cache.GetOrAdd(RegularExpression);
+        var regex = RegexPatterns.GetOrAddCachedRegex(RegularExpression);
         return regex.IsMatch(branchName);
     }
 

@@ -36,7 +36,7 @@ internal class SourceBranchFinder(IEnumerable<IBranch> excludedBranches, IGitVer
             var currentBranchConfig = configuration.GetBranchConfiguration(branch.Name);
             if (currentBranchConfig is { SourceBranches: null })
             {
-                yield return RegexPatterns.Cache.GetOrAdd(".*");
+                yield return RegexPatterns.GetOrAddCachedRegex(".*");
             }
             else
             {
@@ -45,7 +45,7 @@ internal class SourceBranchFinder(IEnumerable<IBranch> excludedBranches, IGitVer
                 {
                     var regex = branches[sourceBranch].RegularExpression;
                     if (regex != null)
-                        yield return RegexPatterns.Cache.GetOrAdd(regex);
+                        yield return RegexPatterns.GetOrAddCachedRegex(regex);
                 }
             }
         }

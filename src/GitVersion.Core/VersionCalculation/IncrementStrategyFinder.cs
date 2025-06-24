@@ -92,7 +92,7 @@ internal class IncrementStrategyFinder(IRepositoryStore repositoryStore, ITagged
     private static Regex TryGetRegexOrDefault(string? messageRegex, Regex defaultRegex) =>
         messageRegex == null
             ? defaultRegex
-            : RegexPatterns.Cache.GetOrAdd(messageRegex);
+            : RegexPatterns.GetOrAddCachedRegex(messageRegex);
 
     private Dictionary<string, ICommit>.ValueCollection GetCommitHistory(string? tagPrefix, SemanticVersionFormat semanticVersionFormat,
         ICommit? baseVersionSource, ICommit currentCommit, string? label, IIgnoreConfiguration ignore)
