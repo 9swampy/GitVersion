@@ -24,6 +24,7 @@
         <ProjectReference Include="..\GitVersion.MsBuild\GitVersion.MsBuild.csproj" />
         <ProjectReference Include="..\GitVersion.Core\GitVersion.Core.csproj" />
         <ProjectReference Include="..\GitVersion.Output\GitVersion.Output.csproj" />
+        <ProjectReference Include="..\GitVersion.Testing\GitVersion.Testing.csproj" />
     </ItemGroup>
     <ItemGroup>
         <Compile Include="..\GitVersion.Core.Tests\Helpers\GitVersionCoreTestModule.cs" Link="Helpers\GitVersionCoreTestModule.cs" />
