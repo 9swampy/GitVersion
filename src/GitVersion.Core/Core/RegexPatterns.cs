@@ -43,6 +43,7 @@ internal static class RegexPatterns
         Cache.TryAdd(Output.CsharpAssemblyAttributeRegex.ToString(), Output.CsharpAssemblyAttributeRegex);
         Cache.TryAdd(Output.FsharpAssemblyAttributeRegex.ToString(), Output.FsharpAssemblyAttributeRegex);
         Cache.TryAdd(Output.VisualBasicAssemblyAttributeRegex.ToString(), Output.VisualBasicAssemblyAttributeRegex);
+        Cache.TryAdd(Output.SanitizeParticipantRegex.ToString(), Output.SanitizeParticipantRegex);
 
         Cache.TryAdd(VersionCalculation.DefaultMajorRegex.ToString(), VersionCalculation.DefaultMajorRegex);
         Cache.TryAdd(VersionCalculation.DefaultMinorRegex.ToString(), VersionCalculation.DefaultMinorRegex);
@@ -183,12 +184,16 @@ internal static class RegexPatterns
         [StringSyntax(StringSyntaxAttribute.Regex)]
         private const string VisualBasicAssemblyAttributeRegexPattern = @"(\s*\<Assembly:\s*(?:.*)\>\s*$(\r?\n)?)";
 
+        [StringSyntax(StringSyntaxAttribute.Regex)]
+        private const string SanitizeParticipantRegexPattern = "[^a-zA-Z0-9]";
+
         public static Regex AssemblyVersionRegex { get; } = new(AssemblyVersionRegexPattern, Options);
         public static Regex AssemblyInfoVersionRegex { get; } = new(AssemblyInfoVersionRegexPattern, Options);
         public static Regex AssemblyFileVersionRegex { get; } = new(AssemblyFileVersionRegexPattern, Options);
         public static Regex CsharpAssemblyAttributeRegex { get; } = new(CsharpAssemblyAttributeRegexPattern, Options | RegexOptions.Multiline);
         public static Regex FsharpAssemblyAttributeRegex { get; } = new(FsharpAssemblyAttributeRegexPattern, Options | RegexOptions.Multiline);
         public static Regex VisualBasicAssemblyAttributeRegex { get; } = new(VisualBasicAssemblyAttributeRegexPattern, Options | RegexOptions.Multiline);
+        public static Regex SanitizeParticipantRegex { get; } = new(SanitizeParticipantRegexPattern, Options);
     }
 
     internal static class VersionCalculation
