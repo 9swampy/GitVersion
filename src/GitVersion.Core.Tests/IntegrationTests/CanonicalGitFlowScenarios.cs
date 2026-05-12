@@ -290,66 +290,181 @@ public class CanonicalGitFlowScenarios
     /// SemVer ordering requires advancing the version number past any tag.
     /// Tag a commit to reset to a clean X.Y.Z version.
     /// </summary>
+    // Production shorthand (requires ConfigurationProvider to expand workflow defaults):
+    //   workflow: GitFlow/v1
+    //   branches:
+    //     main:    { mode: ManualDeployment }
+    //     hotfix:  { label: '{BranchName}', is-release-branch: false }
+    //     bugfix:  { mode: ManualDeployment, label: '{BranchName}', increment: Inherit,
+    //                regex: '^bugfix[s]?[/-](?<BranchName>.+)',
+    //                source-branches: [develop, main, release, support, hotfix] }
+    //
+    // The following is the fully self-contained form (required by ConfigurationSerializer
+    // in tests, which does raw YAML parse without workflow default expansion):
     public const string CanonicalGitFlowYaml = """
+        assembly-versioning-scheme: MajorMinorPatch
+        assembly-file-versioning-scheme: MajorMinorPatch
+        tag-prefix: '[vV]?'
+        tag-pre-release-weight: 60000
+        commit-date-format: yyyy-MM-dd
+        semantic-version-format: Strict
+        mode: ContinuousDelivery
+        label: '{BranchName}'
+        increment: Inherit
+        prevent-increment:
+          of-merged-branch: false
+          when-branch-merged: false
+          when-current-commit-tagged: true
+        track-merge-target: false
+        track-merge-message: true
+        commit-message-incrementing: Enabled
+        strategies:
+          - Fallback
+          - ConfiguredNextVersion
+          - MergeMessage
+          - TaggedCommit
+          - TrackReleaseBranches
+          - VersionInBranchName
+
         branches:
           main:
-            regex: '^master$|^main$'
+            mode: ManualDeployment
             label: ''
             increment: Patch
-            deployment-mode: ManualDeployment
+            regex: '^master$|^main$'
+            source-branches: []
             is-main-branch: true
+            is-release-branch: false
             prevent-increment:
               of-merged-branch: true
+            pre-release-weight: 55000
 
           develop:
-            regex: '^dev(elop)?(ment)?$'
+            mode: ContinuousDelivery
             label: alpha
             increment: Minor
-            deployment-mode: ContinuousDelivery
+            regex: '^dev(elop)?(ment)?$'
+            source-branches:
+              - main
             tracks-release-branches: true
             track-merge-target: true
+            is-release-branch: false
+            is-main-branch: false
+            prevent-increment:
+              when-current-commit-tagged: false
+            pre-release-weight: 0
 
           release:
-            regex: '^releases?[/-](?<BranchName>.+)'
+            mode: ManualDeployment
             label: beta
             increment: Minor
-            deployment-mode: ManualDeployment
+            regex: '^releases?[/-](?<BranchName>.+)'
+            source-branches:
+              - main
+              - support
             is-release-branch: true
+            is-main-branch: false
             prevent-increment:
               of-merged-branch: true
-            source-branches: [main, support]
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
 
           feature:
-            regex: '^features?[/-](?<BranchName>.+)'
+            mode: ManualDeployment
             label: '{BranchName}'
             increment: Inherit
-            deployment-mode: ManualDeployment
-            source-branches: [develop, main, release, support, hotfix]
+            regex: '^features?[/-](?<BranchName>.+)'
+            source-branches:
+              - develop
+              - main
+              - release
+              - support
+              - hotfix
+            is-release-branch: false
+            is-main-branch: false
+            prevent-increment:
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
 
           bugfix:
-            regex: '^bugfix[s]?[/-](?<BranchName>.+)'
+            mode: ManualDeployment
             label: '{BranchName}'
             increment: Inherit
-            deployment-mode: ManualDeployment
-            source-branches: [develop, main, release, support, hotfix]
+            regex: '^bugfix[s]?[/-](?<BranchName>.+)'
+            source-branches:
+              - develop
+              - main
+              - release
+              - support
+              - hotfix
+            is-release-branch: false
+            is-main-branch: false
+            prevent-increment:
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
 
           hotfix:
-            regex: '^hotfix(es)?[/-](?<BranchName>.+)'
+            mode: ManualDeployment
             label: '{BranchName}'
             increment: Inherit
-            deployment-mode: ManualDeployment
+            regex: '^hotfix(es)?[/-](?<BranchName>.+)'
+            source-branches:
+              - main
+              - support
             is-release-branch: false
-            source-branches: [main, support]
+            is-main-branch: false
+            prevent-increment:
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
 
           support:
-            regex: '^support[/-](?<BranchName>.+)'
+            mode: ContinuousDelivery
             label: ''
             increment: Patch
+            regex: '^support[/-](?<BranchName>.+)'
+            source-branches:
+              - main
             is-main-branch: true
+            is-release-branch: false
             prevent-increment:
               of-merged-branch: true
-            source-branches: [main]
+            pre-release-weight: 55000
 
-        commit-message-incrementing: Enabled
+          pull-request:
+            mode: ContinuousDelivery
+            label: 'PullRequest{Number}'
+            increment: Inherit
+            regex: '^(pull-requests?|pull|pr)[/-](?<Number>\d*)'
+            source-branches:
+              - develop
+              - main
+              - release
+              - feature
+              - support
+              - hotfix
+            is-release-branch: false
+            is-main-branch: false
+            prevent-increment:
+              of-merged-branch: true
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
+
+          unknown:
+            mode: ManualDeployment
+            label: '{BranchName}'
+            increment: Inherit
+            regex: '(?<BranchName>.+)'
+            source-branches:
+              - main
+              - develop
+              - release
+              - feature
+              - pull-request
+              - hotfix
+              - support
+            is-release-branch: false
+            is-main-branch: false
+            prevent-increment:
+              when-current-commit-tagged: true
         """;
 }
