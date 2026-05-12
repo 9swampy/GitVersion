@@ -69,7 +69,10 @@ guarantees:
   - id: G2
     description: Version authority branches extract version from branch name
   - id: G3
-    description: master between tags produces build metadata, not prerelease
+    description: >
+      master between tags produces X.Y.(Z+1)-1+N — a prerelease with commit distance
+      in build metadata. The ADR constraint (CON-002) documents that pure build-metadata
+      format (1.0.0+N, no prerelease) is unachievable in GitVersion due to SemVer ordering.
   - id: G4
     description: Force-bump via commit message overrides branch increment (upward only)
   - id: G5
@@ -401,6 +404,150 @@ requirements:
       test_id: CanonicalGitFlowScenarios.ForceBump_Patch_OnMinorBranch_DoesNotDowngradeIncrement
       test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
 
+  - id: FUNC-G1-005
+    kind: functional
+    guarantee_id: G1
+    description: develop produces alpha prerelease with Minor increment
+    dependencies: [AC-G1-005]
+
+  - id: AC-G1-005
+    kind: acceptance_criteria
+    guarantee_id: G1
+    parent: FUNC-G1-005
+    description: develop branch produces X.Y.0-alpha.N, incrementing Minor from last tag
+    positive:
+      when:
+        - master tagged 1.0.0
+        - develop branched from master with 0 commits
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "1.1.0-alpha.0"
+    negative:
+      cases:
+        - id: WRONG_INCREMENT
+          when: version is 1.0.1-alpha.0 (Patch increment, not Minor)
+          then:
+            outcome: reject
+            code: WRONG_INCREMENT
+        - id: ALPHA_LABEL_ABSENT
+          when: version has no "alpha" label
+          then:
+            outcome: reject
+            code: ALPHA_LABEL_ABSENT
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.Develop_ProducesAlphaVersion
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: FUNC-G1-006
+    kind: functional
+    guarantee_id: G1
+    description: feature/* produces {BranchName} label with commit distance in build metadata
+    dependencies: [AC-G1-006]
+
+  - id: AC-G1-006
+    kind: acceptance_criteria
+    guarantee_id: G1
+    parent: FUNC-G1-006
+    description: feature/my-feature produces "my-feature" label; +N counts parent branch commits
+    positive:
+      when:
+        - master tagged 1.0.0
+        - develop has 1 commit
+        - branch feature/my-feature branched from develop
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "1.1.0-my-feature.1+1"
+          - +N includes parent develop commit (CON-004)
+    negative:
+      cases:
+        - id: WRONG_LABEL
+          when: label is "alpha" or "beta" instead of branch name segment
+          then:
+            outcome: reject
+            code: WRONG_LABEL
+        - id: ZERO_METADATA
+          when: build metadata is +0 immediately after branching from develop with commits
+          then:
+            outcome: reject
+            code: ZERO_METADATA
+            notes: CON-004 — parent branch commits count toward +N
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.FeatureBranch_ProducesLabelFromBranchName
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: FUNC-G4-002
+    kind: functional
+    guarantee_id: G4
+    description: +semver minor force-bump on label carrier branch
+    dependencies: [AC-G4-003]
+
+  - id: AC-G4-003
+    kind: acceptance_criteria
+    guarantee_id: G4
+    parent: FUNC-G4-002
+    description: "+semver: minor on hotfix (Inherit/Patch) overrides to Minor"
+    positive:
+      when:
+        - master tagged 1.0.0
+        - hotfix/sec-patch branched from master
+        - commit message contains "+semver: minor"
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer contains "1.1.0-sec-patch."
+    negative:
+      cases:
+        - id: MINOR_IGNORED
+          when: version is 1.0.1-sec-patch.1+1 (Patch, not Minor)
+          then:
+            outcome: reject
+            code: MINOR_IGNORED
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenariosFromYaml.ForceBump_Minor_ViaCommitMessage
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenariosFromYaml.cs
+
+  - id: FUNC-G5-001
+    kind: functional
+    guarantee_id: G5
+    description: Tags always produce exact clean version with no prerelease or metadata
+    dependencies: [AC-G5-001]
+
+  - id: AC-G5-001
+    kind: acceptance_criteria
+    guarantee_id: G5
+    parent: FUNC-G5-001
+    description: ApplyTag on any branch produces FullSemVer exactly matching the tag value
+    positive:
+      when:
+        - any commit is tagged X.Y.Z
+        - GitVersion evaluated at that tagged commit
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "X.Y.Z" (no prerelease, no metadata)
+          - PreReleaseLabel = ""
+    negative:
+      cases:
+        - id: PRERELEASE_ON_TAG
+          when: tagged commit still shows prerelease label (e.g. "1.0.0-alpha.1")
+          then:
+            outcome: reject
+            code: PRERELEASE_ON_TAG
+        - id: BUILD_METADATA_ON_TAG
+          when: tagged commit shows build metadata (e.g. "1.0.0+3")
+          then:
+            outcome: reject
+            code: BUILD_METADATA_ON_TAG
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.Master_TaggedCommit_ProducesCleanVersion
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
   - id: FUNC-G6-001
     kind: functional
     guarantee_id: G6
@@ -440,8 +587,12 @@ delivery:
   - id: DEL-001
     kind: delivery
     description: >
-      CanonicalGitFlowScenarios.cs — 10 integration tests, all green.
-      Embedded CanonicalGitFlowYaml const — the GitVersion.yml deliverable.
+      CanonicalGitFlowScenarios.cs — 10 integration tests (builder-derived config), all green.
+      CanonicalGitFlowScenariosFromYaml.cs — 10 integration tests (YAML-parsed config), all green.
+      Both suites pass: 20/20. Proves YAML deliverable and builder config are behaviourally identical.
+      Embedded CanonicalGitFlowYaml const is the GitVersion.yml deliverable; self-contained form
+      (all required root fields) validated via ConfigurationSerializer; production shorthand
+      (workflow: GitFlow/v1 + 3 override lines) documented in comments.
     status: COMPLETE
     location: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
 
