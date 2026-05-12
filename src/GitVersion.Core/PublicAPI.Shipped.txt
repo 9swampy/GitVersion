@@ -160,6 +160,7 @@ GitVersion.ConfigurationInfo.ConfigurationInfo() -> void
 GitVersion.ConfigurationInfo.ConfigurationInfo(GitVersion.ConfigurationInfo! original) -> void
 GitVersion.ConfigurationInfo.OverrideConfiguration -> System.Collections.Generic.IReadOnlyDictionary<object!, object?>?
 GitVersion.ConfigurationInfo.ShowConfiguration -> bool
+GitVersion.ConfigurationInfo.ValidateConfiguration -> bool
 GitVersion.Extensions.AssemblyVersionsGeneratorExtensions
 GitVersion.Extensions.AssemblyVersionsGeneratorExtensions.extension(GitVersion.SemanticVersion!)
 GitVersion.Extensions.AssemblyVersionsGeneratorExtensions.extension(GitVersion.SemanticVersion!).GetAssemblyFileVersion(GitVersion.Configuration.AssemblyFileVersioningScheme scheme) -> string?
