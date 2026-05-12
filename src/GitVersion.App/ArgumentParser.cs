@@ -296,8 +296,14 @@ internal class ArgumentParser(IEnvironment environment,
             return true;
         }
 
-        if (!name.IsSwitch("updatewixversionfile")) return false;
-        arguments.UpdateWixVersionFile = true;
+        if (name.IsSwitch("updatewixversionfile"))
+        {
+            arguments.UpdateWixVersionFile = true;
+            return true;
+        }
+
+        if (!name.IsSwitch("validate")) return false;
+        arguments.ValidateConfig = true;
         return true;
     }
 
