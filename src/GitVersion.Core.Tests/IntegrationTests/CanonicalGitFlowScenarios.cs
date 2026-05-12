@@ -218,18 +218,15 @@ public class CanonicalGitFlowScenarios
     {
         using var fixture = new EmptyRepositoryFixture("master");
 
-        // Step 1: Initial release on master
         fixture.MakeATaggedCommit("1.0.0");
         fixture.AssertFullSemver("1.0.0", Configuration);
 
-        // Step 2: Open develop stream
         fixture.BranchTo("develop");
         fixture.AssertFullSemver("1.1.0-alpha.0", Configuration);
         fixture.MakeACommit();
         fixture.AssertFullSemver("1.1.0-alpha.1", Configuration);
 
-        // Step 3: Feature branch from develop
-        // develop has 1 commit since 1.0.0 → feature starts at +1
+        // +N counts parent branch commits since version source, not only current branch commits
         fixture.BranchTo("feature/login");
         fixture.AssertFullSemver("1.1.0-login.1+1", Configuration);
         fixture.MakeACommit();
@@ -237,11 +234,9 @@ public class CanonicalGitFlowScenarios
         fixture.Checkout("develop");
         fixture.MergeNoFF("feature/login");
         fixture.Remove("feature/login");
-        // develop commit + feature commit + merge commit = 3 since 1.0.0
+        // no-ff: develop commit + feature commit + merge commit = 3
         fixture.AssertFullSemver("1.1.0-alpha.3", Configuration);
 
-        // Step 4: Bugfix branch from develop
-        // develop has 3 commits since 1.0.0 → bugfix starts at +3
         fixture.BranchTo("bugfix/typo-fix");
         fixture.AssertFullSemver("1.1.0-typo-fix.1+3", Configuration);
         fixture.MakeACommit();
@@ -249,11 +244,9 @@ public class CanonicalGitFlowScenarios
         fixture.Checkout("develop");
         fixture.MergeNoFF("bugfix/typo-fix");
         fixture.Remove("bugfix/typo-fix");
-        // 3 + bugfix commit + merge commit = 5 since 1.0.0
+        // no-ff: 3 + bugfix commit + merge commit = 5
         fixture.AssertFullSemver("1.1.0-alpha.5", Configuration);
 
-        // Step 5: Release branch — version from branch name
-        // develop has 5 commits since 1.0.0
         fixture.BranchTo("release/1.1.0");
         fixture.AssertFullSemver("1.1.0-beta.1+5", Configuration);
         fixture.MakeACommit();
@@ -266,7 +259,6 @@ public class CanonicalGitFlowScenarios
         fixture.MergeNoFF("release/1.1.0");
         fixture.Remove("release/1.1.0");
 
-        // Step 6: Hotfix from master — branch name, not "beta"
         fixture.Checkout("master");
         fixture.BranchTo("hotfix/sec-patch");
         fixture.AssertFullSemver("1.1.1-sec-patch.1+0", Configuration);
@@ -280,7 +272,6 @@ public class CanonicalGitFlowScenarios
         fixture.MergeNoFF("hotfix/sec-patch");
         fixture.Remove("hotfix/sec-patch");
 
-        // Step 7: Master between tags
         fixture.Checkout("master");
         fixture.MakeACommit();
         fixture.AssertFullSemver("1.1.2-1+1", Configuration);
