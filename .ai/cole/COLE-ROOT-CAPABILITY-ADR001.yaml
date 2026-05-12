@@ -1,0 +1,491 @@
+# COLE Root Capability — ADR-001: Canonical GitFlow Configuration for GitVersion
+# Protocol: COLE PILLAR Decomposition v2.3
+# Status: Accepted (retroactive — fixture already implemented and green)
+# Exemplar: #1 (GitFlow). General problem deferred. See seam notes at bottom.
+
+root_capability:
+  id: CAP-CGFC-001
+  name: Canonical GitFlow Configuration for GitVersion
+  kind: capability
+
+  motivation: >
+    GitVersion configuration across repositories has been ad-hoc, inconsistently interpreted,
+    and brittle under branch topology changes. The root cause of versioning failures (e.g.
+    master producing 1.62.0-alpha.261 instead of 1.61.0) is the absence of a semantically
+    closed reference model that maps organizational GitFlow intent to GitVersion behaviour.
+    GitVersion's documentation describes mechanics but does not provide a Version Authority
+    vs. Label Carrier model grounded in its actual SemVer ordering constraints.
+
+  intent: >
+    Produce a verified GitVersion.yml that deterministically implements canonical GitFlow
+    versioning, backed by an executable integration test fixture that serves as a living
+    specification. Any repository adopting this YAML gets predictable, auditable versioning
+    without needing to understand GitVersion internals.
+
+  rationale: >
+    An integration test fixture in the GitVersion repo itself (no source changes) is chosen
+    over documentation or convention because: (1) it is executable and fails loudly if
+    semantics drift, (2) it uses GitVersion's own test infrastructure to model real Git
+    graphs, not mocked state, (3) the fixture IS the specification — the YAML is extracted
+    from it, not maintained separately, (4) it forces discovery of undocumented behaviours
+    (e.g. build metadata count, +semver: patch non-downgrade) before they cause production
+    failures.
+
+  behaviour_anticipated: >
+    Given a repository with the canonical GitVersion.yml at root, GitVersion produces:
+    master (tagged) = X.Y.Z; master (untagged) = X.Y.(Z+1)-1+N; develop = X.Y.0-alpha.N;
+    release/X.Y.Z = X.Y.Z-beta.1+N; feature/name = X.Y.0-name.1+N; bugfix/name =
+    X.Y.0-name.1+N; hotfix/name = X.Y.(Z+1)-name.1+N. Force-bump via +semver: major/minor
+    overrides branch increment. Tags always reset to exact version.
+
+  brownfield_inventory:
+    - id: GitFlowConfigurationBuilder
+      type: existing_capability
+      location: src/GitVersion.Configuration/Builders/GitFlowConfigurationBuilder.cs
+      contract_boundary: true
+      assumption_class: inviolable_external_contract
+      notes: >
+        Builder used as TDD scaffold. Not modified. Overrides applied via WithBranch()
+        action overloads which use GetOrAdd semantics — merges onto existing config.
+    - id: EmptyRepositoryFixture
+      type: existing_capability
+      location: src/GitVersion.Testing/Fixtures/EmptyRepositoryFixture.cs
+      contract_boundary: true
+      assumption_class: inviolable_external_contract
+      notes: Default branch is "main" — must pass "master" explicitly.
+    - id: AssertFullSemver
+      type: existing_capability
+      location: src/GitVersion.Core.Tests/Extensions/GitRepositoryTestingExtensions.cs
+      contract_boundary: true
+      assumption_class: inviolable_external_contract
+
+---
+
+# GUARANTEES (G-level, trace to ACs below)
+
+guarantees:
+  - id: G1
+    description: Each branch type produces its defined label pattern
+  - id: G2
+    description: Version authority branches extract version from branch name
+  - id: G3
+    description: master between tags produces build metadata, not prerelease
+  - id: G4
+    description: Force-bump via commit message overrides branch increment (upward only)
+  - id: G5
+    description: Tags always produce exact clean version, resetting all counters
+  - id: G6
+    description: No GitVersion source code is modified
+
+---
+
+# CONSTRAINTS
+
+constraints:
+  - id: CON-001
+    kind: constraint
+    description: >
+      No modifications to GitVersion source code. All behaviour must be achieved
+      through GitVersion.yml configuration alone.
+    assumption_class: inviolable_external_contract
+
+  - id: CON-002
+    kind: constraint
+    description: >
+      SemVer ordering is preserved. 1.0.0+N (stable + metadata, no version advance)
+      is unachievable — GitVersion requires any commit past a tag to sort after it.
+      master between tags MUST produce X.Y.(Z+1)-1+N, not X.Y.Z+N.
+    assumption_class: semantic_invariant
+
+  - id: CON-003
+    kind: constraint
+    description: >
+      +semver: patch on a branch configured for Minor increment does NOT downgrade
+      the increment. Message directives specify "at least X" — branch config wins
+      when higher.
+    assumption_class: semantic_invariant
+
+  - id: CON-004
+    kind: constraint
+    description: >
+      Build metadata +N on a feature/bugfix/hotfix branch counts commits since
+      version source including all parent branch commits, not only commits made
+      on the current branch. +N=0 is not achievable immediately after branching
+      from a branch with commits.
+    assumption_class: semantic_invariant
+
+---
+
+# SCOPE
+
+scope:
+  - id: SCOPE-001
+    kind: scope
+    in_scope:
+      - GitVersion.yml configuration (the deliverable)
+      - Integration test fixture in GitVersion.Core.Tests
+      - Branch types: master, develop, release/*, feature/*, bugfix/*, hotfix/*
+      - Increment mechanisms: tags, +semver: commit messages, branch name (release/*)
+    out_of_scope:
+      - GitVersion source code changes
+      - Branch protection enforcement (merge topology is a CI/CD concern, not GitVersion)
+      - Pull request branch configuration
+      - Support branch configuration (present in defaults, not exercised in fixture)
+      - Generalised GitVersion.yml generator (deferred — this is Exemplar #1)
+
+---
+
+# ASSUMPTIONS
+
+assumptions:
+  - id: ASM-001
+    kind: assumption
+    assumption_class: semantic_invariant
+    description: >
+      no-FF merges are the only permitted merge strategy. Direct pushes to develop
+      or master are prohibited. GitVersion source-branches config partially models
+      permitted lineage but does not enforce merge strategy — that is a branch
+      protection concern.
+
+  - id: ASM-002
+    kind: assumption
+    assumption_class: degrees_of_freedom
+    description: >
+      The canonical labels (alpha, beta, {BranchName}) are conventional defaults.
+      They are explicitly negotiable per repository without changing the structural
+      model.
+
+---
+
+# FUNCTIONAL REQUIREMENTS AND ACCEPTANCE CRITERIA
+
+requirements:
+
+  - id: FUNC-G1-001
+    kind: functional
+    guarantee_id: G1
+    description: master/main branch with ManualDeployment and empty label
+    dependencies: [AC-G1-001, AC-G1-002]
+
+  - id: AC-G1-001
+    kind: acceptance_criteria
+    guarantee_id: G1
+    parent: FUNC-G1-001
+    description: Tagged master commit produces clean version
+    positive:
+      when:
+        - master branch has a commit tagged X.Y.Z
+        - GitVersion evaluated at that commit
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "X.Y.Z"
+          - PreReleaseLabel = ""
+    negative:
+      cases:
+        - id: TAG_IGNORED
+          when: tag exists but version includes prerelease label
+          then:
+            outcome: reject
+            code: TAG_IGNORED
+        - id: WRONG_VERSION
+          when: version does not match tag value
+          then:
+            outcome: reject
+            code: WRONG_VERSION
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.Master_TaggedCommit_ProducesCleanVersion
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: AC-G1-002
+    kind: acceptance_criteria
+    guarantee_id: G1
+    parent: FUNC-G1-001
+    description: master between tags produces X.Y.(Z+1)-1+N (ADR constraint — 1.0.0+N unachievable)
+    positive:
+      when:
+        - master branch has tag X.Y.Z
+        - N commits made after tag
+        - no new tag applied
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "X.Y.(Z+1)-1+N"
+          - PreReleaseLabel = "1"
+          - BuildMetaData = N
+    negative:
+      cases:
+        - id: ALPHA_LABEL_LEAK
+          when: version contains "alpha" label (lineage traversal through develop)
+          then:
+            outcome: reject
+            code: ALPHA_LABEL_LEAK
+            notes: Root cause — missing source-branches:[] on master; lineage follows merge parent to develop
+        - id: METADATA_ONLY
+          when: version is "X.Y.Z+N" with no prerelease segment
+          then:
+            outcome: reject
+            code: METADATA_ONLY
+            notes: Unachievable in GitVersion — SemVer ordering constraint (CON-002)
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.Master_BetweenTags_ProducesBuildMetadata
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: FUNC-G1-003
+    kind: functional
+    guarantee_id: G1
+    description: hotfix branch produces {BranchName} label, not "beta"
+    dependencies: [AC-G1-003]
+
+  - id: AC-G1-003
+    kind: acceptance_criteria
+    guarantee_id: G1
+    parent: FUNC-G1-003
+    description: hotfix/fix-auth produces "fix-auth" as prerelease label, not "beta"
+    positive:
+      when:
+        - branch named "hotfix/fix-auth" branched from tagged master
+        - GitVersion evaluated on hotfix branch
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer contains "-fix-auth."
+          - FullSemVer does not contain "-beta."
+    negative:
+      cases:
+        - id: BETA_LABEL
+          when: label is "beta" (default GitFlowConfigurationBuilder value for hotfix)
+          then:
+            outcome: reject
+            code: BETA_LABEL
+        - id: VERSION_FROM_NAME
+          when: hotfix branch name treated as version source (IsReleaseBranch=true)
+          then:
+            outcome: reject
+            code: VERSION_FROM_NAME
+            notes: Prevented by IsReleaseBranch=false on hotfix override
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.HotfixBranch_ProducesLabelFromBranchName_NotBeta
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: FUNC-G1-004
+    kind: functional
+    guarantee_id: G1
+    description: bugfix branch (new — not in default GitFlow) produces {BranchName} label
+    dependencies: [AC-G1-004]
+
+  - id: AC-G1-004
+    kind: acceptance_criteria
+    guarantee_id: G1
+    parent: FUNC-G1-004
+    description: bugfix/my-fix produces "my-fix" as prerelease label
+    positive:
+      when:
+        - branch named "bugfix/my-fix" branched from develop
+        - GitVersion evaluated on bugfix branch
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer contains "-my-fix."
+    negative:
+      cases:
+        - id: BRANCH_NOT_MATCHED
+          when: bugfix/* regex not configured — falls through to unknown branch handler
+          then:
+            outcome: reject
+            code: BRANCH_NOT_MATCHED
+        - id: SOURCE_BRANCH_VALIDATION_FAILURE
+          when: bugfix source-branches references a key not in branch dictionary
+          then:
+            outcome: reject
+            code: SOURCE_BRANCH_VALIDATION_FAILURE
+            notes: ConfigurationException thrown at build time — use ConfigurationConstants key names
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.BugfixBranch_ProducesLabelFromBranchName
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: FUNC-G2-001
+    kind: functional
+    guarantee_id: G2
+    description: release/* extracts version from branch name via VersionInBranchName strategy
+    dependencies: [AC-G2-001]
+
+  - id: AC-G2-001
+    kind: acceptance_criteria
+    guarantee_id: G2
+    parent: FUNC-G2-001
+    description: release/0.1.0 produces 0.1.0-beta.1+N (version from name, not from develop increment)
+    positive:
+      when:
+        - master tagged 0.0.1
+        - develop has 1 commit
+        - branch named "release/0.1.0" branched from develop
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "0.1.0-beta.1+1"
+          - Version authority is branch name, not develop increment
+    negative:
+      cases:
+        - id: WRONG_VERSION_SOURCE
+          when: version is 0.0.2-beta.1 (from develop patch increment, not branch name)
+          then:
+            outcome: reject
+            code: WRONG_VERSION_SOURCE
+            notes: Requires IsReleaseBranch=true on release branch
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.ReleaseBranch_ProducesBetaWithVersionFromBranchName
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: FUNC-G4-001
+    kind: functional
+    guarantee_id: G4
+    description: Force-bump via +semver commit message
+    dependencies: [AC-G4-001, AC-G4-002]
+
+  - id: AC-G4-001
+    kind: acceptance_criteria
+    guarantee_id: G4
+    parent: FUNC-G4-001
+    description: "+semver: major on develop overrides Minor increment to Major"
+    positive:
+      when:
+        - master tagged 1.0.0
+        - develop commit message contains "+semver: major"
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "2.0.0-alpha.1"
+    negative:
+      cases:
+        - id: COMMIT_MESSAGE_IGNORED
+          when: version is 1.1.0-alpha.1 (Minor increment unchanged)
+          then:
+            outcome: reject
+            code: COMMIT_MESSAGE_IGNORED
+            notes: Requires CommitMessageIncrementing=Enabled (default)
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.ForceBump_Major_ViaCommitMessage
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: AC-G4-002
+    kind: acceptance_criteria
+    guarantee_id: G4
+    parent: FUNC-G4-001
+    description: "+semver: patch on Minor branch does NOT downgrade to Patch (CON-003)"
+    positive:
+      when:
+        - master tagged 1.2.0
+        - develop commit message contains "+semver: patch"
+      then:
+        outcome: accept
+        side_effects:
+          - FullSemVer = "1.3.0-alpha.1"
+          - Minor increment wins (patch message is minimum, not exact)
+    negative:
+      cases:
+        - id: PATCH_DOWNGRADE
+          when: version is 1.2.1-alpha.1 (patch override succeeds on Minor branch)
+          then:
+            outcome: reject
+            code: PATCH_DOWNGRADE
+            notes: +semver: patch means "at least patch" — branch increment wins when higher
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios.ForceBump_Patch_OnMinorBranch_DoesNotDowngradeIncrement
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: FUNC-G6-001
+    kind: functional
+    guarantee_id: G6
+    description: Test fixture and YAML deliverable exist without GitVersion source changes
+    dependencies: [AC-G6-001]
+
+  - id: AC-G6-001
+    kind: acceptance_criteria
+    guarantee_id: G6
+    parent: FUNC-G6-001
+    description: No files outside CanonicalGitFlowScenarios.cs and .ai/ are created or modified
+    positive:
+      when:
+        - fixture created
+        - all 10 tests pass
+      then:
+        outcome: accept
+        side_effects:
+          - git diff --name-only shows only CanonicalGitFlowScenarios.cs and .ai/ paths
+    negative:
+      cases:
+        - id: SOURCE_CODE_MODIFIED
+          when: any file in src/ other than CanonicalGitFlowScenarios.cs is modified
+          then:
+            outcome: reject
+            code: SOURCE_CODE_MODIFIED
+    test_mapping:
+      test_type: integration
+      test_id: CanonicalGitFlowScenarios (all 10 tests pass)
+      test_file: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+---
+
+# DELIVERY
+
+delivery:
+  - id: DEL-001
+    kind: delivery
+    description: >
+      CanonicalGitFlowScenarios.cs — 10 integration tests, all green.
+      Embedded CanonicalGitFlowYaml const — the GitVersion.yml deliverable.
+    status: COMPLETE
+    location: src/GitVersion.Core.Tests/IntegrationTests/CanonicalGitFlowScenarios.cs
+
+  - id: DEL-002
+    kind: delivery
+    description: >
+      Phase0 semantic observation log — 8 entries covering gaps discovered during
+      session (1.0.0+N constraint, hotfix label, bugfix absence, +semver: patch
+      non-downgrade, commit count semantics, no-ff merge count, source-branches:[]
+      root cause, merge topology limits).
+    status: COMPLETE
+    location: .ai/observations/gitflow-config-adr001-2026-05-12.jsonl
+
+  - id: DEL-003
+    kind: delivery
+    description: This COLE root capability document (retroactive).
+    status: COMPLETE
+    location: .ai/cole/COLE-ROOT-CAPABILITY-ADR001.yaml
+
+---
+
+# ABSTRACTION SEAM — GENERAL PROBLEM (DEFERRED)
+
+# This document is Exemplar #1: GitFlow.
+#
+# General Problem (deferred — do not implement until a second exemplar validates the abstraction):
+#
+#   Given:
+#     - A set of branch classifiers (regex → role)
+#     - Version authority vs. label carrier semantics per branch
+#     - Increment mechanics (None/Patch/Minor/Major/Inherit)
+#     - Deployment mode per branch (ManualDeployment/ContinuousDelivery/ContinuousDeployment)
+#     - Override mechanics (commit message tags, branch name, tags)
+#   Produce:
+#     - A deterministic GitVersion.yml
+#     - A testable branch → SemVer mapping (COLE fixture)
+#
+# GitFlow-specific dimensions that are NOT general:
+#   - "develop" as a named first-class integration stream
+#   - "release/*" name-driven version authority
+#   - "alpha"/"beta" as conventional label names
+#   - Minor bump on develop as the default
+#
+# Promotion criteria to Exemplar #2:
+#   - At least one non-GitFlow workflow (e.g. trunk-based, release-train) demonstrates
+#     which COLE structure is reusable and which is GitFlow-specific
+#   - After Exemplar #2, build the generalised protocol/utility
