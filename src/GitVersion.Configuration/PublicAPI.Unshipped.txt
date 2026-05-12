@@ -1,1 +1,29 @@
 #nullable enable
+GitVersion.Configuration.Validation.ConfigurationSemanticValidator
+GitVersion.Configuration.Validation.ConfigurationSemanticValidator.ConfigurationSemanticValidator() -> void
+GitVersion.Configuration.Validation.ConfigurationSemanticValidator.Validate(GitVersion.Configuration.IGitVersionConfiguration! configuration) -> System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Validation.SemanticViolation!>!
+GitVersion.Configuration.Validation.SemanticViolation
+GitVersion.Configuration.Validation.SemanticViolation.<Clone>$() -> GitVersion.Configuration.Validation.SemanticViolation!
+GitVersion.Configuration.Validation.SemanticViolation.BranchName.get -> string?
+GitVersion.Configuration.Validation.SemanticViolation.BranchName.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.CausalNote.get -> string?
+GitVersion.Configuration.Validation.SemanticViolation.CausalNote.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.Deconstruct(out string! RuleId, out GitVersion.Configuration.Validation.SemanticViolationSeverity Severity, out string? BranchName, out string! Message, out string! Remediation, out string? CausalNote) -> void
+GitVersion.Configuration.Validation.SemanticViolation.Equals(GitVersion.Configuration.Validation.SemanticViolation? other) -> bool
+GitVersion.Configuration.Validation.SemanticViolation.Message.get -> string!
+GitVersion.Configuration.Validation.SemanticViolation.Message.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.Remediation.get -> string!
+GitVersion.Configuration.Validation.SemanticViolation.Remediation.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.RuleId.get -> string!
+GitVersion.Configuration.Validation.SemanticViolation.RuleId.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.Severity.get -> GitVersion.Configuration.Validation.SemanticViolationSeverity
+GitVersion.Configuration.Validation.SemanticViolation.Severity.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.SemanticViolation(string! RuleId, GitVersion.Configuration.Validation.SemanticViolationSeverity Severity, string? BranchName, string! Message, string! Remediation, string? CausalNote = null) -> void
+GitVersion.Configuration.Validation.SemanticViolationSeverity
+GitVersion.Configuration.Validation.SemanticViolationSeverity.Error = 1 -> GitVersion.Configuration.Validation.SemanticViolationSeverity
+GitVersion.Configuration.Validation.SemanticViolationSeverity.Warning = 0 -> GitVersion.Configuration.Validation.SemanticViolationSeverity
+override GitVersion.Configuration.Validation.SemanticViolation.Equals(object? obj) -> bool
+override GitVersion.Configuration.Validation.SemanticViolation.GetHashCode() -> int
+override GitVersion.Configuration.Validation.SemanticViolation.ToString() -> string!
+static GitVersion.Configuration.Validation.SemanticViolation.operator !=(GitVersion.Configuration.Validation.SemanticViolation? left, GitVersion.Configuration.Validation.SemanticViolation? right) -> bool
+static GitVersion.Configuration.Validation.SemanticViolation.operator ==(GitVersion.Configuration.Validation.SemanticViolation? left, GitVersion.Configuration.Validation.SemanticViolation? right) -> bool
