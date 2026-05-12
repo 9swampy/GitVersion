@@ -1,4 +1,161 @@
 #nullable enable
+GitVersion.Configuration.Synthesis.YamlEmitter
+GitVersion.Configuration.Synthesis.YamlEmitter.Emit(GitVersion.Configuration.Synthesis.SynthesisConfig! config) -> string!
+GitVersion.Configuration.Synthesis.YamlEmitter.YamlEmitter() -> void
+GitVersion.Configuration.Synthesis.IncrementSource
+GitVersion.Configuration.Synthesis.IncrementSource.BranchName = 0 -> GitVersion.Configuration.Synthesis.IncrementSource
+GitVersion.Configuration.Synthesis.IncrementSource.BranchNameAndCommitMessage = 3 -> GitVersion.Configuration.Synthesis.IncrementSource
+GitVersion.Configuration.Synthesis.IncrementSource.CommitMessage = 2 -> GitVersion.Configuration.Synthesis.IncrementSource
+GitVersion.Configuration.Synthesis.IncrementSource.TagOnly = 1 -> GitVersion.Configuration.Synthesis.IncrementSource
+GitVersion.Configuration.Synthesis.SemanticMapper
+GitVersion.Configuration.Synthesis.SemanticMapper.Map(GitVersion.Configuration.Synthesis.SynthesisDetectionResult! detection, GitVersion.Configuration.Synthesis.IncrementSource incrementSource) -> GitVersion.Configuration.Synthesis.SynthesisConfig!
+GitVersion.Configuration.Synthesis.SemanticMapper.SemanticMapper() -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.<Clone>$() -> GitVersion.Configuration.Synthesis.SynthesisBranchConfig!
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.BranchPattern.get -> string!
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.BranchPattern.init -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Deconstruct(out string! BranchPattern, out string! DerivedRegex, out GitVersion.Configuration.Synthesis.BranchRole Role, out string! Label, out GitVersion.VersionCalculation.DeploymentMode Mode, out System.Collections.Generic.IReadOnlyList<string!>! SourceBranches) -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.DerivedRegex.get -> string!
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.DerivedRegex.init -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Equals(GitVersion.Configuration.Synthesis.SynthesisBranchConfig? other) -> bool
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Label.get -> string!
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Label.init -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Mode.get -> GitVersion.VersionCalculation.DeploymentMode
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Mode.init -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Role.get -> GitVersion.Configuration.Synthesis.BranchRole
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Role.init -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.SourceBranches.get -> System.Collections.Generic.IReadOnlyList<string!>!
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.SourceBranches.init -> void
+GitVersion.Configuration.Synthesis.SynthesisBranchConfig.SynthesisBranchConfig(string! BranchPattern, string! DerivedRegex, GitVersion.Configuration.Synthesis.BranchRole Role, string! Label, GitVersion.VersionCalculation.DeploymentMode Mode, System.Collections.Generic.IReadOnlyList<string!>! SourceBranches) -> void
+GitVersion.Configuration.Synthesis.SynthesisConfig
+GitVersion.Configuration.Synthesis.SynthesisConfig.<Clone>$() -> GitVersion.Configuration.Synthesis.SynthesisConfig!
+GitVersion.Configuration.Synthesis.SynthesisConfig.Branches.get -> System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisBranchConfig!>!
+GitVersion.Configuration.Synthesis.SynthesisConfig.Branches.init -> void
+GitVersion.Configuration.Synthesis.SynthesisConfig.Deconstruct(out GitVersion.Configuration.Synthesis.TopologyClassification! Topology, out System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisBranchConfig!>! Branches, out GitVersion.Configuration.Synthesis.IncrementSource IncrementSource, out System.Collections.Generic.IReadOnlyList<string!>! Strategies) -> void
+GitVersion.Configuration.Synthesis.SynthesisConfig.Equals(GitVersion.Configuration.Synthesis.SynthesisConfig? other) -> bool
+GitVersion.Configuration.Synthesis.SynthesisConfig.IncrementSource.get -> GitVersion.Configuration.Synthesis.IncrementSource
+GitVersion.Configuration.Synthesis.SynthesisConfig.IncrementSource.init -> void
+GitVersion.Configuration.Synthesis.SynthesisConfig.Strategies.get -> System.Collections.Generic.IReadOnlyList<string!>!
+GitVersion.Configuration.Synthesis.SynthesisConfig.Strategies.init -> void
+GitVersion.Configuration.Synthesis.SynthesisConfig.SynthesisConfig(GitVersion.Configuration.Synthesis.TopologyClassification! Topology, System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisBranchConfig!>! Branches, GitVersion.Configuration.Synthesis.IncrementSource IncrementSource, System.Collections.Generic.IReadOnlyList<string!>! Strategies) -> void
+GitVersion.Configuration.Synthesis.SynthesisConfig.Topology.get -> GitVersion.Configuration.Synthesis.TopologyClassification!
+GitVersion.Configuration.Synthesis.SynthesisConfig.Topology.init -> void
+override GitVersion.Configuration.Synthesis.SynthesisBranchConfig.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.SynthesisBranchConfig.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.SynthesisBranchConfig.ToString() -> string!
+override GitVersion.Configuration.Synthesis.SynthesisConfig.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.SynthesisConfig.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.SynthesisConfig.ToString() -> string!
+static GitVersion.Configuration.Synthesis.SynthesisBranchConfig.operator !=(GitVersion.Configuration.Synthesis.SynthesisBranchConfig? left, GitVersion.Configuration.Synthesis.SynthesisBranchConfig? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisBranchConfig.operator ==(GitVersion.Configuration.Synthesis.SynthesisBranchConfig? left, GitVersion.Configuration.Synthesis.SynthesisBranchConfig? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisConfig.operator !=(GitVersion.Configuration.Synthesis.SynthesisConfig? left, GitVersion.Configuration.Synthesis.SynthesisConfig? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisConfig.operator ==(GitVersion.Configuration.Synthesis.SynthesisConfig? left, GitVersion.Configuration.Synthesis.SynthesisConfig? right) -> bool
+GitVersion.Configuration.Synthesis.CommonTopologies
+static readonly GitVersion.Configuration.Synthesis.CommonTopologies.GitFlow -> GitVersion.Configuration.Synthesis.TopologyClassification!
+static readonly GitVersion.Configuration.Synthesis.CommonTopologies.TrunkBased -> GitVersion.Configuration.Synthesis.TopologyClassification!
+GitVersion.Configuration.Synthesis.DetectionOnlySynthesis
+GitVersion.Configuration.Synthesis.DetectionOnlySynthesis.Detect(System.Collections.Generic.IEnumerable<(string! BranchPattern, string? VersionExample)>! userInputs) -> GitVersion.Configuration.Synthesis.SynthesisDetectionResult!
+GitVersion.Configuration.Synthesis.DetectionOnlySynthesis.DetectionOnlySynthesis() -> void
+GitVersion.Configuration.Synthesis.DetectionOnlySynthesis.DetectionOnlySynthesis(GitVersion.Configuration.Synthesis.TopologyClassifier! classifier, GitVersion.Configuration.Synthesis.VersionExampleParser! parser, GitVersion.Configuration.Synthesis.AmbiguityDetector! detector) -> void
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.<Clone>$() -> GitVersion.Configuration.Synthesis.SynthesisDetectionResult!
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Deconstruct(out GitVersion.Configuration.Synthesis.TopologyClassification! Topology, out System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisInput!>! Inputs, out System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisDiagnostic!>! Diagnostics) -> void
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Diagnostics.get -> System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisDiagnostic!>!
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Diagnostics.init -> void
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Equals(GitVersion.Configuration.Synthesis.SynthesisDetectionResult? other) -> bool
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Inputs.get -> System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisInput!>!
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Inputs.init -> void
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.IsSuccessful.get -> bool
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.SynthesisDetectionResult(GitVersion.Configuration.Synthesis.TopologyClassification! Topology, System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisInput!>! Inputs, System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisDiagnostic!>! Diagnostics) -> void
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Topology.get -> GitVersion.Configuration.Synthesis.TopologyClassification!
+GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Topology.init -> void
+override GitVersion.Configuration.Synthesis.SynthesisDetectionResult.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.SynthesisDetectionResult.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.SynthesisDetectionResult.ToString() -> string!
+static GitVersion.Configuration.Synthesis.SynthesisDetectionResult.operator !=(GitVersion.Configuration.Synthesis.SynthesisDetectionResult? left, GitVersion.Configuration.Synthesis.SynthesisDetectionResult? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisDetectionResult.operator ==(GitVersion.Configuration.Synthesis.SynthesisDetectionResult? left, GitVersion.Configuration.Synthesis.SynthesisDetectionResult? right) -> bool
+GitVersion.Configuration.Synthesis.AmbiguityDetector
+GitVersion.Configuration.Synthesis.AmbiguityDetector.AmbiguityDetector() -> void
+GitVersion.Configuration.Synthesis.AmbiguityDetector.Detect(GitVersion.Configuration.Synthesis.TopologyClassification! topology, System.Collections.Generic.IEnumerable<GitVersion.Configuration.Synthesis.SynthesisInput!>! inputs) -> System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisDiagnostic!>!
+GitVersion.Configuration.Synthesis.BranchRole
+GitVersion.Configuration.Synthesis.BranchRole.LabelCarrier = 2 -> GitVersion.Configuration.Synthesis.BranchRole
+GitVersion.Configuration.Synthesis.BranchRole.Primary = 0 -> GitVersion.Configuration.Synthesis.BranchRole
+GitVersion.Configuration.Synthesis.BranchRole.VersionAuthority = 1 -> GitVersion.Configuration.Synthesis.BranchRole
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.<Clone>$() -> GitVersion.Configuration.Synthesis.SynthesisDiagnostic!
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.BranchPattern.get -> string?
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.BranchPattern.init -> void
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Code.get -> string!
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Code.init -> void
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Deconstruct(out string! Code, out string? BranchPattern, out string! Message, out System.Collections.Generic.IReadOnlyDictionary<string!, object?>! Fields) -> void
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Equals(GitVersion.Configuration.Synthesis.SynthesisDiagnostic? other) -> bool
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Fields.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>!
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Fields.init -> void
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Message.get -> string!
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Message.init -> void
+GitVersion.Configuration.Synthesis.SynthesisDiagnostic.SynthesisDiagnostic(string! Code, string? BranchPattern, string! Message, System.Collections.Generic.IReadOnlyDictionary<string!, object?>! Fields) -> void
+GitVersion.Configuration.Synthesis.SynthesisInput
+GitVersion.Configuration.Synthesis.SynthesisInput.<Clone>$() -> GitVersion.Configuration.Synthesis.SynthesisInput!
+GitVersion.Configuration.Synthesis.SynthesisInput.BranchPattern.get -> string!
+GitVersion.Configuration.Synthesis.SynthesisInput.BranchPattern.init -> void
+GitVersion.Configuration.Synthesis.SynthesisInput.Deconstruct(out string! BranchPattern, out string? VersionExample, out GitVersion.Configuration.Synthesis.VersionExampleInference? Inference) -> void
+GitVersion.Configuration.Synthesis.SynthesisInput.Equals(GitVersion.Configuration.Synthesis.SynthesisInput? other) -> bool
+GitVersion.Configuration.Synthesis.SynthesisInput.Inference.get -> GitVersion.Configuration.Synthesis.VersionExampleInference?
+GitVersion.Configuration.Synthesis.SynthesisInput.Inference.init -> void
+GitVersion.Configuration.Synthesis.SynthesisInput.SynthesisInput(string! BranchPattern, string? VersionExample, GitVersion.Configuration.Synthesis.VersionExampleInference? Inference) -> void
+GitVersion.Configuration.Synthesis.SynthesisInput.VersionExample.get -> string?
+GitVersion.Configuration.Synthesis.SynthesisInput.VersionExample.init -> void
+override GitVersion.Configuration.Synthesis.SynthesisDiagnostic.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.SynthesisDiagnostic.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.SynthesisDiagnostic.ToString() -> string!
+override GitVersion.Configuration.Synthesis.SynthesisInput.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.SynthesisInput.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.SynthesisInput.ToString() -> string!
+static GitVersion.Configuration.Synthesis.SynthesisDiagnostic.operator !=(GitVersion.Configuration.Synthesis.SynthesisDiagnostic? left, GitVersion.Configuration.Synthesis.SynthesisDiagnostic? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisDiagnostic.operator ==(GitVersion.Configuration.Synthesis.SynthesisDiagnostic? left, GitVersion.Configuration.Synthesis.SynthesisDiagnostic? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisInput.operator !=(GitVersion.Configuration.Synthesis.SynthesisInput? left, GitVersion.Configuration.Synthesis.SynthesisInput? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisInput.operator ==(GitVersion.Configuration.Synthesis.SynthesisInput? left, GitVersion.Configuration.Synthesis.SynthesisInput? right) -> bool
+GitVersion.Configuration.Synthesis.VersionExampleInference
+GitVersion.Configuration.Synthesis.VersionExampleInference.<Clone>$() -> GitVersion.Configuration.Synthesis.VersionExampleInference!
+GitVersion.Configuration.Synthesis.VersionExampleInference.Deconstruct(out GitVersion.Configuration.Synthesis.BranchRole Role, out string! Label, out GitVersion.VersionCalculation.DeploymentMode? SuggestedMode) -> void
+GitVersion.Configuration.Synthesis.VersionExampleInference.Equals(GitVersion.Configuration.Synthesis.VersionExampleInference? other) -> bool
+GitVersion.Configuration.Synthesis.VersionExampleInference.Label.get -> string!
+GitVersion.Configuration.Synthesis.VersionExampleInference.Label.init -> void
+GitVersion.Configuration.Synthesis.VersionExampleInference.Role.get -> GitVersion.Configuration.Synthesis.BranchRole
+GitVersion.Configuration.Synthesis.VersionExampleInference.Role.init -> void
+GitVersion.Configuration.Synthesis.VersionExampleInference.SuggestedMode.get -> GitVersion.VersionCalculation.DeploymentMode?
+GitVersion.Configuration.Synthesis.VersionExampleInference.SuggestedMode.init -> void
+GitVersion.Configuration.Synthesis.VersionExampleInference.VersionExampleInference(GitVersion.Configuration.Synthesis.BranchRole Role, string! Label, GitVersion.VersionCalculation.DeploymentMode? SuggestedMode) -> void
+GitVersion.Configuration.Synthesis.VersionExampleParser
+GitVersion.Configuration.Synthesis.VersionExampleParser.Parse(string! branchPattern, string! versionExample) -> GitVersion.Configuration.Synthesis.VersionExampleInference!
+GitVersion.Configuration.Synthesis.VersionExampleParser.VersionExampleParser() -> void
+override GitVersion.Configuration.Synthesis.VersionExampleInference.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.VersionExampleInference.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.VersionExampleInference.ToString() -> string!
+static GitVersion.Configuration.Synthesis.VersionExampleInference.operator !=(GitVersion.Configuration.Synthesis.VersionExampleInference? left, GitVersion.Configuration.Synthesis.VersionExampleInference? right) -> bool
+static GitVersion.Configuration.Synthesis.VersionExampleInference.operator ==(GitVersion.Configuration.Synthesis.VersionExampleInference? left, GitVersion.Configuration.Synthesis.VersionExampleInference? right) -> bool
+GitVersion.Configuration.Synthesis.TopologyClassification
+GitVersion.Configuration.Synthesis.TopologyClassification.<Clone>$() -> GitVersion.Configuration.Synthesis.TopologyClassification!
+GitVersion.Configuration.Synthesis.TopologyClassification.Deconstruct(out GitVersion.Configuration.Synthesis.TopologyKind Kind, out string? ExemplarName) -> void
+GitVersion.Configuration.Synthesis.TopologyClassification.Equals(GitVersion.Configuration.Synthesis.TopologyClassification? other) -> bool
+GitVersion.Configuration.Synthesis.TopologyClassification.ExemplarName.get -> string?
+GitVersion.Configuration.Synthesis.TopologyClassification.ExemplarName.init -> void
+GitVersion.Configuration.Synthesis.TopologyClassification.Kind.get -> GitVersion.Configuration.Synthesis.TopologyKind
+GitVersion.Configuration.Synthesis.TopologyClassification.Kind.init -> void
+GitVersion.Configuration.Synthesis.TopologyClassification.TopologyClassification(GitVersion.Configuration.Synthesis.TopologyKind Kind, string? ExemplarName) -> void
+GitVersion.Configuration.Synthesis.TopologyClassifier
+GitVersion.Configuration.Synthesis.TopologyClassifier.Classify(System.Collections.Generic.IEnumerable<string!>! branchPatterns) -> GitVersion.Configuration.Synthesis.TopologyClassification!
+GitVersion.Configuration.Synthesis.TopologyClassifier.TopologyClassifier() -> void
+GitVersion.Configuration.Synthesis.TopologyKind
+GitVersion.Configuration.Synthesis.TopologyKind.GitFlow = 0 -> GitVersion.Configuration.Synthesis.TopologyKind
+GitVersion.Configuration.Synthesis.TopologyKind.Hybrid = 2 -> GitVersion.Configuration.Synthesis.TopologyKind
+GitVersion.Configuration.Synthesis.TopologyKind.TrunkBased = 1 -> GitVersion.Configuration.Synthesis.TopologyKind
+GitVersion.Configuration.Synthesis.TopologyKind.Unknown = 3 -> GitVersion.Configuration.Synthesis.TopologyKind
+override GitVersion.Configuration.Synthesis.TopologyClassification.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.TopologyClassification.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.TopologyClassification.ToString() -> string!
+static GitVersion.Configuration.Synthesis.TopologyClassification.operator !=(GitVersion.Configuration.Synthesis.TopologyClassification? left, GitVersion.Configuration.Synthesis.TopologyClassification? right) -> bool
+static GitVersion.Configuration.Synthesis.TopologyClassification.operator ==(GitVersion.Configuration.Synthesis.TopologyClassification? left, GitVersion.Configuration.Synthesis.TopologyClassification? right) -> bool
 GitVersion.Configuration.Attributes.Format
 GitVersion.Configuration.Attributes.Format.Date = 0 -> GitVersion.Configuration.Attributes.Format
 GitVersion.Configuration.Attributes.Format.DateTime = 1 -> GitVersion.Configuration.Attributes.Format
@@ -41,3 +198,33 @@ GitVersion.Configuration.ConfigurationException.ConfigurationException(string! m
 GitVersion.Configuration.GitVersionConfigurationModule
 GitVersion.Configuration.GitVersionConfigurationModule.GitVersionConfigurationModule() -> void
 GitVersion.Configuration.GitVersionConfigurationModule.RegisterTypes(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
+GitVersion.Configuration.Validation.ConfigurationSemanticValidator
+GitVersion.Configuration.Validation.ConfigurationSemanticValidator.ConfigurationSemanticValidator() -> void
+GitVersion.Configuration.Validation.ConfigurationSemanticValidator.Validate(GitVersion.Configuration.IGitVersionConfiguration! configuration) -> System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Validation.SemanticViolation!>!
+GitVersion.Configuration.Validation.SemanticViolation
+GitVersion.Configuration.Validation.SemanticViolation.<Clone>$() -> GitVersion.Configuration.Validation.SemanticViolation!
+GitVersion.Configuration.Validation.SemanticViolation.BranchName.get -> string?
+GitVersion.Configuration.Validation.SemanticViolation.BranchName.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.CausalNote.get -> string?
+GitVersion.Configuration.Validation.SemanticViolation.CausalNote.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.Deconstruct(out string! RuleId, out string! Title, out GitVersion.Configuration.Validation.SemanticViolationSeverity Severity, out string? BranchName, out string! Message, out string! Remediation, out string? CausalNote) -> void
+GitVersion.Configuration.Validation.SemanticViolation.Equals(GitVersion.Configuration.Validation.SemanticViolation? other) -> bool
+GitVersion.Configuration.Validation.SemanticViolation.Message.get -> string!
+GitVersion.Configuration.Validation.SemanticViolation.Message.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.Remediation.get -> string!
+GitVersion.Configuration.Validation.SemanticViolation.Remediation.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.RuleId.get -> string!
+GitVersion.Configuration.Validation.SemanticViolation.RuleId.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.Severity.get -> GitVersion.Configuration.Validation.SemanticViolationSeverity
+GitVersion.Configuration.Validation.SemanticViolation.Severity.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.Title.get -> string!
+GitVersion.Configuration.Validation.SemanticViolation.Title.init -> void
+GitVersion.Configuration.Validation.SemanticViolation.SemanticViolation(string! RuleId, string! Title, GitVersion.Configuration.Validation.SemanticViolationSeverity Severity, string? BranchName, string! Message, string! Remediation, string? CausalNote = null) -> void
+GitVersion.Configuration.Validation.SemanticViolationSeverity
+GitVersion.Configuration.Validation.SemanticViolationSeverity.Error = 1 -> GitVersion.Configuration.Validation.SemanticViolationSeverity
+GitVersion.Configuration.Validation.SemanticViolationSeverity.Warning = 0 -> GitVersion.Configuration.Validation.SemanticViolationSeverity
+override GitVersion.Configuration.Validation.SemanticViolation.Equals(object? obj) -> bool
+override GitVersion.Configuration.Validation.SemanticViolation.GetHashCode() -> int
+override GitVersion.Configuration.Validation.SemanticViolation.ToString() -> string!
+static GitVersion.Configuration.Validation.SemanticViolation.operator !=(GitVersion.Configuration.Validation.SemanticViolation? left, GitVersion.Configuration.Validation.SemanticViolation? right) -> bool
+static GitVersion.Configuration.Validation.SemanticViolation.operator ==(GitVersion.Configuration.Validation.SemanticViolation? left, GitVersion.Configuration.Validation.SemanticViolation? right) -> bool
