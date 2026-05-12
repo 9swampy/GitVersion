@@ -192,4 +192,95 @@ public class CanonicalTrunkBasedScenarios
         fixture.Remove("feature/dashboard");
         fixture.AssertFullSemver("1.2.0", Configuration);
     }
+
+    // Self-contained GitVersion.yml for trunk-based development.
+    // Based on workflow: TrunkBased/preview1 (docs/input/docs/workflows/TrunkBased/preview1.yml).
+    // No customisation needed — the preview1 defaults are the canonical trunk-based config.
+    public const string CanonicalTrunkBasedYaml = """
+        assembly-versioning-scheme: MajorMinorPatch
+        assembly-file-versioning-scheme: MajorMinorPatch
+        tag-prefix: '[vV]?'
+        tag-pre-release-weight: 60000
+        commit-date-format: yyyy-MM-dd
+        semantic-version-format: Strict
+        mode: ContinuousDelivery
+        label: '{BranchName}'
+        increment: Inherit
+        prevent-increment:
+          of-merged-branch: false
+          when-branch-merged: false
+          when-current-commit-tagged: true
+        track-merge-target: false
+        track-merge-message: true
+        commit-message-incrementing: Enabled
+        strategies:
+          - ConfiguredNextVersion
+          - Mainline
+
+        branches:
+          main:
+            mode: ContinuousDeployment
+            label: ''
+            increment: Patch
+            regex: '^master$|^main$'
+            source-branches: []
+            is-main-branch: true
+            is-release-branch: false
+            prevent-increment:
+              of-merged-branch: true
+            pre-release-weight: 55000
+
+          feature:
+            mode: ContinuousDelivery
+            label: '{BranchName}'
+            increment: Minor
+            regex: '^features?[/-](?<BranchName>.+)'
+            source-branches:
+              - main
+            is-main-branch: false
+            is-release-branch: false
+            prevent-increment:
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
+
+          hotfix:
+            mode: ContinuousDelivery
+            label: '{BranchName}'
+            increment: Patch
+            regex: '^hotfix(es)?[/-](?<BranchName>.+)'
+            source-branches:
+              - main
+            is-main-branch: false
+            is-release-branch: true
+            prevent-increment:
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
+
+          pull-request:
+            mode: ContinuousDelivery
+            label: 'PullRequest{Number}'
+            increment: Inherit
+            regex: '^(pull-requests?|pull|pr)[/-](?<Number>\d*)'
+            source-branches:
+              - main
+              - feature
+              - hotfix
+            is-main-branch: false
+            is-release-branch: false
+            prevent-increment:
+              of-merged-branch: true
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
+
+          unknown:
+            increment: Patch
+            regex: '(?<BranchName>.+)'
+            source-branches:
+              - main
+            is-main-branch: false
+            is-release-branch: false
+            prevent-increment:
+              when-current-commit-tagged: false
+            pre-release-weight: 30000
+        """;
 }
