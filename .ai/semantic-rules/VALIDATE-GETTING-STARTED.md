@@ -10,6 +10,22 @@
 
 ---
 
+## What the Validator Does NOT Do
+
+The validator does not enforce workflow conventions or branch strategy preferences.
+It enforces only the semantic invariants required for deterministic version calculation.
+
+Specifically, it does **not**:
+- Recommend GitFlow, TrunkBased, or any other workflow model
+- Warn when a configuration differs from canonical exemplars
+- Interpret business process intent or team conventions
+
+If your configuration passes the validator, it is semantically correct regardless of
+whether it matches any published exemplar. The exemplars are starting points; the
+validator is an arbiter of physics.
+
+---
+
 ## The Foundational Distinction
 
 > **Validation closes intention. Fixtures close expectation.**

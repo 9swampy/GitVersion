@@ -221,6 +221,21 @@ Severity: Advisory (per DEC-016 ARC-001 — engine-default inheritance is valid;
 
 ---
 
+## Rule Admission Governance
+
+Before any rule is added, it must pass the Counterfactual Validity Test (DEC-015):
+> If the user explicitly intended this configuration, would the system still consider it valid?
+- YES → at most Advisory (if it explains engine behaviour); otherwise no rule
+- NO → may be Error or Warning
+
+Advisory rules additionally must satisfy ARC-001 (DEC-016): state validity explicitly,
+use no normative language, describe engine behaviour not workflow preference.
+
+Explicit non-rules (cases considered and decided against):
+- `bugfix.source-branches` not including `release` — valid by intent (DEC-015 applied)
+
+---
+
 ## Rules Under Consideration (Not Yet Ratified)
 
 These are candidate rules from the session context, not yet stable enough to implement:

@@ -5,6 +5,52 @@ Each entry records what was decided, why, and what it replaced or superseded.
 
 ---
 
+## DEC-016: Advisory Rule Contract ARC-001 — Structural Constraints on Advisory Text (2026-05-13)
+
+**An advisory MUST:**
+1. State validity explicitly: "This configuration is valid."
+2. Avoid normative language: no "should", "recommended", "best practice"
+3. Describe alternative behaviour, not preference: "Some workflows also..." only where it explains engine behaviour
+4. Not reference any workflow (GitFlow, TrunkBased) as authority
+5. Only exist where it adds interpretive clarity about engine behaviour — not to acknowledge workflow diversity
+
+**An advisory MUST NOT:**
+- Be implemented solely to acknowledge that alternative workflows exist
+- Imply that a change is recommended
+- Encode workflow ideology under the guise of observation
+
+**Rule admission classification refined:**
+
+| Situation | Action |
+|---|---|
+| Violates semantic invariant | Error |
+| Creates risk or ambiguity in version output | Warning |
+| Explains surprising but legal engine behaviour | Advisory |
+| Prevents misinterpretation of engine output | Advisory |
+| Only acknowledges alternative workflows | No rule |
+| Purely workflow or style choice | No rule |
+
+**Why:** Every additional rule increases cognitive load and risks policy creep. Absence of a rule is a deliberate feature, not an omission.
+
+---
+
+## DEC-015: Counterfactual Validity Test — Admission Gate for All Rules (2026-05-13)
+
+**The test (mandatory before any rule is admitted):**
+> If the user explicitly intended this configuration, would the system still consider it valid?
+
+- **YES** → rule cannot be Error or Warning; at most Advisory (if it explains engine behaviour); preferably no rule at all
+- **NO** → rule may be Error or Warning
+
+**Applied to the bugfix narrowing case:**
+`bugfix.source-branches: [develop]` — could a user intend this? Yes (confirmed by in-production usage). Therefore: no rule. Not even an advisory — it would only acknowledge an alternative workflow, not explain engine behaviour.
+
+**Why:** Without this test, rules drift into policy enforcement. The counterfactual makes the physics/policy boundary operational rather than philosophical.
+
+**How to apply:** Before writing any new rule, answer the counterfactual. If YES, document the explicit decision NOT to add a rule. Absence of a rule is a conscious decision that belongs in the catalogue.
+
+---
+
 ## DEC-014: Step 2 Tightened Invariants — Synthesis Cannot Create Intent (2026-05-12)
 
 **The primary invariant:**
