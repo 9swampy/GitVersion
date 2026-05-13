@@ -124,6 +124,44 @@ public class YamlEmitterTests
             $"Synthesis output must not produce validator errors. Errors: {string.Join(", ", errors.Select(e => $"{e.RuleId}[{e.BranchName}]"))}");
     }
 
+    // ── Emission-key injectivity (DEC-018) ───────────────────────────────────────
+
+    [Test]
+    public void DuplicateBranchFamilyKeys_ThrowsInternalFailure()
+    {
+        // AmbiguityDetector emits F-005 for duplicate-family intake — but if a
+        // caller bypasses detection (or a future refactor regresses it), the
+        // emitter must not silently produce invalid YAML / last-write-wins
+        // output. The contract is: synthesis aborts with an internal failure.
+        var config = new SynthesisConfig(
+            new TopologyClassification(TopologyKind.GitFlow, "GitFlow/v1"),
+            new[]
+            {
+                new SynthesisBranchConfig(
+                    "feature/Login",
+                    "^feature/(?<BranchName>.+)",
+                    BranchRole.LabelCarrier,
+                    ConfigurationConstants.BranchNamePlaceholder,
+                    DeploymentMode.ContinuousDeployment,
+                    Array.Empty<string>()),
+                new SynthesisBranchConfig(
+                    "feature/Search",
+                    "^feature/(?<BranchName>.+)",
+                    BranchRole.LabelCarrier,
+                    ConfigurationConstants.BranchNamePlaceholder,
+                    DeploymentMode.ContinuousDeployment,
+                    Array.Empty<string>())
+            },
+            IncrementSource.BranchName,
+            new[] { "Fallback" });
+
+        var exception = Should.Throw<InvalidOperationException>(() => _sut.Emit(config));
+
+        exception.Message.ShouldContain("synthesis invariants",
+            customMessage: "Guard must frame the failure as an internal invariant break, not a user input error");
+        exception.Message.ShouldContain("feature");
+    }
+
     // ── Prims nominal inputs ──────────────────────────────────────────────────────
 
     private static readonly (string BranchPattern, string? VersionExample)[] PrimsNominalInputs =

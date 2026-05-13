@@ -15,6 +15,7 @@ namespace GitVersion.Configuration.Synthesis;
 ///   F-002  Insufficient example signal — format unrecognized, mode cannot be inferred
 ///   F-003  Conflicting authority signals — primary branch claims version authority (SEM-001 surface)
 ///   F-004  Grammar not recognized — placeholder not in known variable vocabulary (pre-SEM-010)
+///   F-005  Duplicate family examples — two or more inputs collapse to the same emission key
 /// </remarks>
 public sealed class AmbiguityDetector
 {
@@ -45,8 +46,45 @@ public sealed class AmbiguityDetector
         CheckExampleFormatRecognised(inputList, diagnostics);
         CheckPrimaryBranchDoesNotClaimVersionAuthority(inputList, diagnostics);
         CheckBranchPatternUsesKnownVariables(inputList, diagnostics);
+        CheckBranchFamiliesAreUnique(inputList, diagnostics);
 
         return diagnostics.AsReadOnly();
+    }
+
+    private static void CheckBranchFamiliesAreUnique(
+        IReadOnlyList<SynthesisInput> inputs,
+        List<SynthesisDiagnostic> diagnostics)
+    {
+        // GitVersion's branches: map is keyed by family, not by instance.
+        // Two inputs that derive the same BranchFamilyKey would emit colliding
+        // YAML map entries — the emitter cannot recover and YamlEmitter has a
+        // matching internal-failure guard. Reject the intake here so the user
+        // sees an actionable diagnostic instead of a downstream invariant break.
+        var collisions = inputs
+            .GroupBy(i => BranchFamilyKey.Derive(i.BranchPattern))
+            .Where(g => g.Count() > 1);
+
+        foreach (var collision in collisions)
+        {
+            var family = collision.Key;
+            var branches = collision.Select(i => i.BranchPattern).ToArray();
+
+            diagnostics.Add(new SynthesisDiagnostic(
+                "F-005",
+                family,
+                $"Multiple examples map to the same branch family '{family}'.\n\n" +
+                "GitVersion configuration defines branches at the family level, not per-instance.\n" +
+                "Only one example per branch family is permitted.\n\n" +
+                "Provide a single representative example for this family or use explicit overrides.",
+                new Dictionary<string, object?>
+                {
+                    ["code"] = "F-005",
+                    ["family"] = family,
+                    ["branches"] = branches,
+                    ["reason"] = "DuplicateFamilyExamples",
+                    ["action"] = "Provide one example per family"
+                }));
+        }
     }
 
     private static void CheckIncrementAuthorityResolvable(

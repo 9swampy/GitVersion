@@ -19,8 +19,18 @@ public sealed class YamlEmitter
     /// The output is parseable by <see cref="ConfigurationSerializer"/> and must pass
     /// <see cref="ConfigurationSemanticValidator"/> with no errors.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when two or more branches in <paramref name="config"/> share a family key
+    /// derived by <see cref="BranchFamilyKey"/>. This indicates a violation of the emission
+    /// injectivity invariant (DEC-018) that should have been intercepted upstream by
+    /// <see cref="AmbiguityDetector"/> as F-005. The emitter never recovers — no merging,
+    /// no deduplication, no last-write-wins — because the user-facing diagnostic and the
+    /// validator-as-oracle separation depend on the synthesis pipeline failing loudly.
+    /// </exception>
     public string Emit(SynthesisConfig config)
     {
+        EnsureUniqueFamilyKeys(config);
+
         var sb = new StringBuilder();
 
         // Structural scaffolding — format requirements, not semantic choices
@@ -46,6 +56,26 @@ public sealed class YamlEmitter
             EmitBranch(sb, branch);
 
         return sb.ToString();
+    }
+
+    private static void EnsureUniqueFamilyKeys(SynthesisConfig config)
+    {
+        var collisions = config.Branches
+            .GroupBy(b => BranchFamilyKey.Derive(b.BranchPattern))
+            .Where(g => g.Count() > 1)
+            .ToList();
+
+        if (collisions.Count == 0)
+            return;
+
+        var details = string.Join("; ", collisions.Select(c =>
+            $"'{c.Key}' shared by [{string.Join(", ", c.Select(b => b.BranchPattern))}]"));
+
+        throw new InvalidOperationException(
+            $"Cannot emit YAML: duplicate branch family keys detected — {details}. " +
+            "This violates synthesis invariants — AmbiguityDetector (F-005) is the " +
+            "boundary that rejects this intake shape; reaching the emitter with " +
+            "colliding family keys indicates the detector was bypassed or regressed.");
     }
 
     private static void EmitStrategies(StringBuilder sb, IReadOnlyList<string> strategies)

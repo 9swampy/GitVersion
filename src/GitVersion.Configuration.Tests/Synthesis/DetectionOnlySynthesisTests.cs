@@ -80,6 +80,26 @@ public class DetectionOnlySynthesisTests
     // ── Failure path: ambiguous inputs ───────────────────────────────────────────
 
     [Test]
+    public void DuplicateFamilyExamples_IsNotSuccessful()
+    {
+        // F-005 must propagate to IsSuccessful=false so callers cannot
+        // accidentally proceed to mapping with intake that would collide on emission.
+        var inputs = new (string, string?)[]
+        {
+            ("master",         "1.62.0"),
+            ("develop",        "1.62.0-alpha1243"),
+            ("release/1.62.0", "1.62.0-beta1244"),
+            ("feature/Login",  "1.62.0-Login42"),
+            ("feature/Search", "1.62.0-Search42")
+        };
+
+        var result = _sut.Detect(inputs);
+
+        result.IsSuccessful.ShouldBeFalse();
+        result.Diagnostics.ShouldContain(d => d.Code == "F-005");
+    }
+
+    [Test]
     public void GitFlowWithoutRelease_IsNotSuccessful()
     {
         var inputs = new (string, string?)[]

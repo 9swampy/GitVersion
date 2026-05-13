@@ -162,6 +162,74 @@ public class AmbiguityDetectorTests
         diagnostics.ShouldNotContain(d => d.Code == "F-004");
     }
 
+    // ── F-005: Duplicate Family Examples ─────────────────────────────────────────
+
+    [Test]
+    public void TwoExamplesOfSameFeatureFamily_EmitsF005()
+    {
+        // Both inputs derive the same emission key ("feature") via BranchFamilyKey.
+        // GitVersion's branches: map allows only one entry per family, so the
+        // detector must reject this at intake before the mapper produces colliding
+        // SynthesisBranchConfig records.
+        var topology = new TopologyClassification(TopologyKind.GitFlow, "GitFlow/v1");
+        var inputs = new[]
+        {
+            Input("master",         "1.62.0"),
+            Input("develop",        "1.62.0-alpha1243"),
+            Input("release/1.62.0", "1.62.0-beta1244"),
+            Input("feature/Login",  "1.62.0-Login42"),
+            Input("feature/Search", "1.62.0-Search42")
+        };
+
+        var diagnostics = _sut.Detect(topology, inputs);
+
+        var f005 = diagnostics.SingleOrDefault(d => d.Code == "F-005");
+        f005.ShouldNotBeNull("Duplicate family intake must surface as F-005");
+        f005!.Fields["family"].ShouldBe("feature");
+        ((string[])f005.Fields["branches"]!).ShouldBe(new[] { "feature/Login", "feature/Search" });
+        f005.Fields["reason"].ShouldBe("DuplicateFamilyExamples");
+    }
+
+    [Test]
+    public void ThreeExamplesOfSameFeatureFamily_EmitsSingleF005()
+    {
+        // One diagnostic per family — not one per duplicate — so the message
+        // can list the full colliding set and the user fixes the intake in one step.
+        var topology = new TopologyClassification(TopologyKind.GitFlow, "GitFlow/v1");
+        var inputs = new[]
+        {
+            Input("master",         "1.62.0"),
+            Input("develop",        "1.62.0-alpha1243"),
+            Input("release/1.62.0", "1.62.0-beta1244"),
+            Input("feature/A",      "1.62.0-A42"),
+            Input("feature/B",      "1.62.0-B42"),
+            Input("feature/C",      "1.62.0-C42")
+        };
+
+        var diagnostics = _sut.Detect(topology, inputs);
+
+        diagnostics.Count(d => d.Code == "F-005").ShouldBe(1);
+    }
+
+    [Test]
+    public void DistinctFamilies_NoF005()
+    {
+        // feature/Login and release/1.62.0 derive distinct family keys
+        // ("feature" and "release") — no collision, no F-005.
+        var topology = new TopologyClassification(TopologyKind.GitFlow, "GitFlow/v1");
+        var inputs = new[]
+        {
+            Input("master",         "1.62.0"),
+            Input("develop",        "1.62.0-alpha1243"),
+            Input("release/1.62.0", "1.62.0-beta1244"),
+            Input("feature/Login",  "1.62.0-Login42")
+        };
+
+        var diagnostics = _sut.Detect(topology, inputs);
+
+        diagnostics.ShouldNotContain(d => d.Code == "F-005");
+    }
+
     // ── Clean set — prims nominal inputs ─────────────────────────────────────────
 
     [Test]
