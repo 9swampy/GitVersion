@@ -16,15 +16,25 @@ namespace GitVersion.Configuration.Tests.Synthesis;
 [TestFixture]
 public class PrimsYamlDetectionTests
 {
-    private static readonly string PrimsGitHubYamlPath = "/git/prims/.github/GitVersion.yml";
+    // Workstation-local dogfood: requires a checkout of the PRIMS estate on disk.
+    // Tests are marked [Explicit] so default (CI) runs skip them entirely rather
+    // than silently rendering inconclusive — opt in with `--filter Category=Dogfood`
+    // or by naming a specific test. Override the location via the PRIMS_ROOT
+    // environment variable when the estate lives elsewhere.
+    private static readonly string PrimsRoot =
+        System.Environment.GetEnvironmentVariable("PRIMS_ROOT") ?? "/git/prims";
+
+    private static string PrimsGitHubYamlPath => Path.Combine(PrimsRoot, ".github/GitVersion.yml");
 
     private readonly DetectionOnlySynthesis _sut = new();
     private readonly ConfigurationSerializer _serializer = new();
 
     [Test]
+    [Explicit("Requires PRIMS estate on disk (see PRIMS_ROOT)")]
+    [Category("Dogfood")]
     public void PrimsGitHubConfig_BranchKeys_ClassifyAsGitFlow()
     {
-        Assume.That(File.Exists(PrimsGitHubYamlPath), "prims .github config not present — skipping");
+        Assume.That(File.Exists(PrimsGitHubYamlPath), $"prims .github config not present at {PrimsGitHubYamlPath} — skipping");
 
         var config = _serializer.ReadConfiguration(File.ReadAllText(PrimsGitHubYamlPath))!;
         var branchKeys = config.Branches.Keys;
@@ -37,13 +47,15 @@ public class PrimsYamlDetectionTests
     }
 
     [Test]
+    [Explicit("Requires PRIMS estate on disk (see PRIMS_ROOT)")]
+    [Category("Dogfood")]
     public void PrimsGitHubConfig_WithoutExamples_F001FiresBecauseIncrementAuthorityUnknown()
     {
         // This is the known limitation documented in Appendix B:
         // The YAML config alone cannot tell us HOW the version advances — only WHAT branches exist.
         // Without Layer 2 (output examples), increment authority cannot be inferred.
         // The user must supply version output examples to complete the synthesis intake.
-        Assume.That(File.Exists(PrimsGitHubYamlPath), "prims .github config not present — skipping");
+        Assume.That(File.Exists(PrimsGitHubYamlPath), $"prims .github config not present at {PrimsGitHubYamlPath} — skipping");
 
         var config = _serializer.ReadConfiguration(File.ReadAllText(PrimsGitHubYamlPath))!;
         var inputs = config.Branches.Keys.Select(k => (BranchPattern: k, VersionExample: (string?)null));
@@ -57,6 +69,8 @@ public class PrimsYamlDetectionTests
     }
 
     [Test]
+    [Explicit("Requires PRIMS estate on disk (see PRIMS_ROOT)")]
+    [Category("Dogfood")]
     public void PrimsGitHubConfig_WithUserSuppliedPatterns_IsSuccessful()
     {
         // When the user supplies BOTH the branch naming convention (with version in release name)
@@ -66,7 +80,7 @@ public class PrimsYamlDetectionTests
         //
         // Note: "release/1.62.0" (user-supplied) vs "release" (YAML key) — only the
         // user-supplied form carries the version signal for VersionAuthority detection.
-        Assume.That(File.Exists(PrimsGitHubYamlPath), "prims .github config not present — skipping");
+        Assume.That(File.Exists(PrimsGitHubYamlPath), $"prims .github config not present at {PrimsGitHubYamlPath} — skipping");
 
         // Layer 1: how the user describes their branches (what they actually type)
         // Layer 2: what version each branch produces (as stated in session)

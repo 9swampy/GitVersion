@@ -17,20 +17,46 @@ namespace GitVersion.Core.Tests.Configuration;
 [TestFixture]
 public class DogfoodValidatorTests
 {
-    private static readonly string PrimsRoot = "/git/prims";
+    // Workstation-local dogfood: requires a checkout of the PRIMS estate on disk.
+    // Tests are marked [Explicit] so default (CI) runs skip them entirely rather
+    // than silently rendering inconclusive — opt in with `--filter Category=Dogfood`
+    // or by naming a specific test. Override the location via the PRIMS_ROOT
+    // environment variable when the estate lives elsewhere.
+    private static readonly string PrimsRoot =
+        System.Environment.GetEnvironmentVariable("PRIMS_ROOT") ?? "/git/prims";
 
     private static IReadOnlyList<SemanticViolation> ValidateFile(string path) =>
         new ConfigurationSemanticValidator().Validate(
             new ConfigurationSerializer().ReadConfiguration(
                 File.ReadAllText(path))!);
 
+    /// <summary>
+    /// Discovers the GitVersion repository root by walking up from the test assembly
+    /// directory until a <c>.gitversion.yml</c> sibling is found. Returns <c>null</c>
+    /// when none is reachable — callers should <see cref="Assume"/> on the result.
+    /// </summary>
+    private static string? FindRepoOwnGitVersionYml()
+    {
+        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(dir.FullName, ".gitversion.yml");
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+        return null;
+    }
+
     // ── PRIMS Estate — Negative Corpus (real files on disk) ─────────────────────
 
     [Test]
+    [Explicit("Requires PRIMS estate on disk (see PRIMS_ROOT)")]
+    [Category("Dogfood")]
     public void Foundation_RealFile_FiresExpectedViolations()
     {
         var path = Path.Combine(PrimsRoot, "foundation/GitVersion.yml");
-        Assume.That(File.Exists(path), "PRIMS foundation config not present — skipping");
+        Assume.That(File.Exists(path), $"PRIMS foundation config not present at {path} — skipping");
 
         var violations = ValidateFile(path);
         var rules = violations.Select(v => v.RuleId).ToHashSet();
@@ -56,10 +82,12 @@ public class DogfoodValidatorTests
     }
 
     [Test]
+    [Explicit("Requires PRIMS estate on disk (see PRIMS_ROOT)")]
+    [Category("Dogfood")]
     public void Strata_RealFile_FiresExpectedViolations()
     {
         var path = Path.Combine(PrimsRoot, "strata/GitVersion.yml");
-        Assume.That(File.Exists(path), "PRIMS strata config not present — skipping");
+        Assume.That(File.Exists(path), $"PRIMS strata config not present at {path} — skipping");
 
         var violations = ValidateFile(path);
         var rules = violations.Select(v => v.RuleId).ToHashSet();
@@ -71,10 +99,12 @@ public class DogfoodValidatorTests
     }
 
     [Test]
+    [Explicit("Requires PRIMS estate on disk (see PRIMS_ROOT)")]
+    [Category("Dogfood")]
     public void GitCheck_RealFile_FiresExpectedViolations()
     {
         var path = Path.Combine(PrimsRoot, "git-check/GitVersion.yml");
-        Assume.That(File.Exists(path), "PRIMS git-check config not present — skipping");
+        Assume.That(File.Exists(path), $"PRIMS git-check config not present at {path} — skipping");
 
         var violations = ValidateFile(path);
         var rules = violations.Select(v => v.RuleId).ToHashSet();
@@ -86,6 +116,8 @@ public class DogfoodValidatorTests
     }
 
     [Test]
+    [Explicit("Requires PRIMS estate on disk (see PRIMS_ROOT)")]
+    [Category("Dogfood")]
     public void AllPrimsViolations_HaveNonEmptyTitlesAndRemediations()
     {
         // Proves the violation output contract holds on real files — no blank fields
@@ -121,8 +153,8 @@ public class DogfoodValidatorTests
         //
         // This test proves: (a) no exception is thrown, (b) the partial config is
         // handled gracefully, (c) SEM-006 fires (no strategies in the partial parse).
-        var path = "/git/gitversion/.gitversion.yml";
-        Assume.That(File.Exists(path), ".gitversion.yml not present — skipping");
+        var path = FindRepoOwnGitVersionYml();
+        Assume.That(path is not null, ".gitversion.yml not reachable from test directory — skipping");
 
         SemanticViolation[]? violations = null;
         Assert.DoesNotThrow(() => violations = ValidateFile(path).ToArray(),
