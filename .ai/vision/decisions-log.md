@@ -5,6 +5,35 @@ Each entry records what was decided, why, and what it replaced or superseded.
 
 ---
 
+## DEC-018: Emission Key Space Must Be Injective With Respect to Branch Families (2026-05-13)
+
+**Invariant (new, non-negotiable):**
+
+> For every set of `SynthesisBranchConfig` records produced by `SemanticMapper`, the family keys derived via `BranchFamilyKey.Derive` MUST be pairwise distinct.
+
+**Why:** GitVersion's `branches:` YAML is a *map* keyed by family (`feature`, `release`, `develop`, ...), not by branch instance. Two examples that collapse to the same family key cannot coexist in valid output — at best you get invalid YAML; at worst, YamlDotNet's last-write-wins parsing silently drops one of the configurations.
+
+**Layering — A is authoritative, B is invariant enforcement:**
+
+| Layer | Role | Output | Classification |
+|---|---|---|---|
+| A — `AmbiguityDetector` F-005 | User-facing validation; rejects malformed intake before mapping | Diagnostic (blocking), `IsSuccessful=false` | User error |
+| B — `YamlEmitter` guard | System invariant protection; only triggers if A is bypassed or regresses | `InvalidOperationException` with "synthesis invariants" framing | Internal failure |
+
+The emitter MUST NOT recover — no merging, no deduplication, no last-write-wins, no silent override. Synthesis aborts loudly because the validator-as-oracle separation depends on it.
+
+**Orthogonality with §B.9a:**
+
+§B.9a injectivity is about **inference-to-rule mapping** — each `VersionExampleInference` produces exactly one `SynthesisBranchConfig`. DEC-018 is about **emission-key uniqueness** — across the *set* of `SynthesisBranchConfig` records, family keys must not collide. The two invariants are orthogonal; both must hold.
+
+**Mechanism — single source of truth:**
+
+`BranchFamilyKey.Derive(branchPattern)` is the canonical family-key function. Both `AmbiguityDetector.CheckBranchFamiliesAreUnique` and `YamlEmitter.EnsureUniqueFamilyKeys` consult it. Divergence between detector and emitter would let one pattern through while colliding on the other — locating the rule in one place prevents this drift.
+
+**Framework note (§C.3.1a):** Classification of the original critique was DEFECT (objective: emitter produces invalid YAML for an unrejected intake shape). Disposition was FIX (A + B) — both because the defect is real (silent corruption, not aesthetic) and because the proper layer is upstream of the emitter (where the reviewer originally pointed). The reviewer's two proposed solutions — "emit per-family" and "generate unique keys" — were each rejected: the first violates §B.9a injectivity; the second violates the consumer reality of GitVersion's per-family YAML map.
+
+---
+
 ## DEC-017: IncrementSource Retained as Intake-Captured Scaffold (2026-05-13)
 
 **Decision:** `IncrementSource` is classified as a **dead field** in the current synthesis pipeline (no upstream reader, no downstream emitter), with disposition **RETAIN** on the basis of documented intent.
