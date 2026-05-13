@@ -1,9 +1,12 @@
 using System.IO.Abstractions;
+using System.Text.Json;
 using GitVersion.Configuration;
+using GitVersion.Configuration.Validation;
 using GitVersion.Extensions;
 using GitVersion.Git;
 using GitVersion.Helpers;
 using GitVersion.Logging;
+using GitVersion.OutputVariables;
 
 namespace GitVersion;
 
@@ -37,6 +40,9 @@ internal class GitVersionExecutor(
     {
         Initialize(gitVersionOptions);
 
+        if (gitVersionOptions.ConfigurationInfo.ValidateConfiguration)
+            return RunValidation(gitVersionOptions);
+
         var exitCode = !VerifyAndDisplayConfiguration(gitVersionOptions)
             ? RunGitVersionTool(gitVersionOptions)
             : 0;
@@ -48,6 +54,101 @@ internal class GitVersionExecutor(
         }
 
         return exitCode;
+    }
+
+    private int RunValidation(GitVersionOptions gitVersionOptions)
+    {
+        IGitVersionConfiguration configuration;
+        try
+        {
+            configuration = this.configurationProvider.Provide(gitVersionOptions.ConfigurationInfo.OverrideConfiguration);
+        }
+        catch (Exception ex)
+        {
+            this.console.WriteLine($"GitVersion Semantic Configuration Validator{FileSystemHelper.Path.NewLine}");
+            this.console.WriteLine($"❌  Error loading configuration: {ex.Message}");
+            this.console.WriteLine($"{FileSystemHelper.Path.NewLine}─────────────────────────────────────────────────────────────────");
+            this.console.WriteLine("  Configuration could not be loaded.");
+            return 1;
+        }
+
+        var violations = new ConfigurationSemanticValidator().Validate(configuration);
+        var errors = violations.Count(v => v.Severity == SemanticViolationSeverity.Error);
+        var warnings = violations.Count(v => v.Severity == SemanticViolationSeverity.Warning);
+        var advisories = violations.Count(v => v.Severity == SemanticViolationSeverity.Advisory);
+
+        if (gitVersionOptions.Output.Contains(OutputType.Json))
+        {
+            EmitJson(violations, errors, warnings, advisories);
+        }
+        else
+        {
+            EmitText(violations, errors, warnings, advisories);
+        }
+
+        return errors > 0 ? 1 : 0;
+    }
+
+    private void EmitText(IReadOnlyList<SemanticViolation> violations, int errors, int warnings, int advisories)
+    {
+        this.console.WriteLine($"GitVersion Semantic Configuration Validator{FileSystemHelper.Path.NewLine}");
+
+        foreach (var v in violations)
+        {
+            var icon = v.Severity switch
+            {
+                SemanticViolationSeverity.Error => "❌ ",
+                SemanticViolationSeverity.Warning => "⚠  ",
+                _ => "ℹ  "
+            };
+            var branch = v.BranchName != null ? $"  branch '{v.BranchName}'" : "  (root)";
+            this.console.WriteLine($"{icon} {v.RuleId}  {v.Severity,-8}{branch}");
+            this.console.WriteLine($"    {v.Title}");
+            this.console.WriteLine($"    {v.Message}");
+            this.console.WriteLine($"{FileSystemHelper.Path.NewLine}    Remediation: {v.Remediation}");
+            if (!string.IsNullOrEmpty(v.CausalNote))
+                this.console.WriteLine($"    Note: {v.CausalNote}");
+            this.console.WriteLine(string.Empty);
+        }
+
+        this.console.WriteLine("─────────────────────────────────────────────────────────────────");
+
+        if (errors == 0 && warnings == 0 && advisories == 0)
+        {
+            this.console.WriteLine("  All semantic invariants satisfied.");
+            this.console.WriteLine($"{FileSystemHelper.Path.NewLine}  0 errors · 0 warnings · 0 advisories");
+            this.console.WriteLine("  Configuration is semantically valid.");
+        }
+        else
+        {
+            var summary = $"  {errors} error{(errors == 1 ? "" : "s")} · {warnings} warning{(warnings == 1 ? "" : "s")} · {advisories} advisor{(advisories == 1 ? "y" : "ies")}";
+            this.console.WriteLine(summary);
+            this.console.WriteLine(errors > 0
+                ? "  Configuration is semantically invalid. Fix errors before relying on output."
+                : "  Configuration is semantically valid.");
+        }
+    }
+
+    private void EmitJson(IReadOnlyList<SemanticViolation> violations, int errors, int warnings, int advisories)
+    {
+        var result = new
+        {
+            valid = errors == 0,
+            summary = new { errors, warnings, advisories },
+            violations = violations.Select(v => new
+            {
+                ruleId = v.RuleId,
+                title = v.Title,
+                severity = v.Severity.ToString(),
+                branchName = v.BranchName,
+                message = v.Message,
+                remediation = v.Remediation,
+                causalNote = v.CausalNote
+            })
+        };
+
+        this.console.WriteLine(JsonSerializer.Serialize(result,
+            new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
     }
 
     private int RunGitVersionTool(GitVersionOptions gitVersionOptions)

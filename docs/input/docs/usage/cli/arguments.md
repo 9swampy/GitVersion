@@ -46,6 +46,15 @@ GitVersion [path]
     /config         Path to config file (defaults to GitVersion.yml, GitVersion.yaml, .GitVersion.yml or .GitVersion.yaml)
     /showconfig     Outputs the effective GitVersion config (defaults + custom
                     from GitVersion.yml, GitVersion.yaml, .GitVersion.yml or .GitVersion.yaml) in yaml format
+    /validate       Validates the GitVersion configuration file against the
+                    semantic rule catalogue without computing a version.
+                    Mutually exclusive with normal version calculation — no
+                    version variables are produced when specified.
+                    Does not require a git repository.
+                    Exit code 0 = valid (warnings and advisories do not block).
+                    Exit code 1 = one or more errors found.
+                    Use /output json for machine-readable output.
+                    Use /config to specify a non-default config file path.
     /overrideconfig Overrides GitVersion config values inline (semicolon-
                     separated key value pairs e.g. /overrideconfig
                     tag-prefix=Foo)

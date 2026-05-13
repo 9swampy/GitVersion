@@ -21,6 +21,7 @@ internal class Arguments
     public bool Diag;
     public bool IsVersion;
     public bool IsHelp;
+    public bool ValidateConfig;
 
     public bool NoFetch;
     public bool NoCache;
@@ -63,7 +64,8 @@ internal class Arguments
             {
                 ConfigurationFile = ConfigurationFile,
                 OverrideConfiguration = OverrideConfiguration,
-                ShowConfiguration = ShowConfiguration
+                ShowConfiguration = ShowConfiguration,
+                ValidateConfiguration = ValidateConfig
             },
 
             RepositoryInfo =
