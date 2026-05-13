@@ -1,2 +1,4 @@
 #nullable enable
+GitVersion.Configuration.Synthesis.BranchFamilyKey
+static GitVersion.Configuration.Synthesis.BranchFamilyKey.Derive(string! branchPattern) -> string!
 static GitVersion.Configuration.Synthesis.TopologyClassifier.IsPrimary(string! branchName) -> bool

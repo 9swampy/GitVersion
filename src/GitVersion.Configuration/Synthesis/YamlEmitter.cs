@@ -58,7 +58,7 @@ public sealed class YamlEmitter
 
     private static void EmitBranch(StringBuilder sb, SynthesisBranchConfig branch)
     {
-        var key = DeriveBranchKey(branch.BranchPattern);
+        var key = BranchFamilyKey.Derive(branch.BranchPattern);
         sb.AppendLine($"  {key}:");
         sb.AppendLine($"    regex: '{EscapeRegex(branch.DerivedRegex)}'");
         sb.AppendLine($"    label: '{branch.Label}'");
@@ -74,15 +74,8 @@ public sealed class YamlEmitter
         {
             sb.AppendLine("    source-branches:");
             foreach (var src in branch.SourceBranches)
-                sb.AppendLine($"      - {DeriveBranchKey(src)}");
+                sb.AppendLine($"      - {BranchFamilyKey.Derive(src)}");
         }
-    }
-
-    private static string DeriveBranchKey(string branchPattern)
-    {
-        // Use the prefix before the first slash as the YAML key
-        var slash = branchPattern.IndexOf('/');
-        return slash >= 0 ? branchPattern[..slash] : branchPattern;
     }
 
     private static string EscapeRegex(string regex)
