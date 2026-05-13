@@ -31,7 +31,12 @@ public sealed class SemanticMapper
     /// Maps a successful detection result to an explicit config.
     /// </summary>
     /// <param name="detection">Must have <see cref="SynthesisDetectionResult.IsSuccessful"/> = true.</param>
-    /// <param name="incrementSource">The forced-choice increment authority declaration.</param>
+    /// <param name="incrementSource">
+    /// The Step-0 forced-choice intake answer for how versions advance (commits,
+    /// merges, branch-name authority, or tags). Stored on the returned config but
+    /// not yet consumed by the emission stage — intentional groundwork awaiting
+    /// the synthesis emission iteration. Treat as a contract input, not dead state.
+    /// </param>
     /// <exception cref="InvalidOperationException">
     /// Thrown when detection is not successful — callers must not proceed past failed detection.
     /// </exception>

@@ -26,7 +26,14 @@ public sealed record SynthesisBranchConfig(
 /// </summary>
 /// <param name="Topology">The classified topology from Step 1.</param>
 /// <param name="Branches">One <see cref="SynthesisBranchConfig"/> per input — injective mapping.</param>
-/// <param name="IncrementSource">How the version number advances — the forced-choice from intake.</param>
+/// <param name="IncrementSource">
+/// How the version number advances — the Step-0 forced-choice intake answer
+/// (commits vs merges vs branch-name vs tag authority) that cannot be derived
+/// from version examples alone. Captured at this boundary today; YAML emission
+/// for this field is deferred to a future synthesis iteration. The asymmetry
+/// between intake capture and emission output is intentional groundwork, not
+/// dead state — removal must be paired with re-design of the intake contract.
+/// </param>
 /// <param name="Strategies">GitVersion version strategies for the topology.</param>
 public sealed record SynthesisConfig(
     TopologyClassification Topology,
