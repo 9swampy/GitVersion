@@ -816,4 +816,12 @@ public class ArgumentParserTests : TestBase
         arguments.ConfigurationFile.ShouldBe(configFile);
         this.fileSystem.File.Delete(configFile);
     }
+
+    [Test]
+    public void ValidateSwitch_SetsValidateConfigFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/validate");
+
+        arguments.ValidateConfig.ShouldBeTrue();
+    }
 }
