@@ -8,23 +8,64 @@ public class VersionExampleParserTests
 {
     private readonly VersionExampleParser _sut = new();
 
-    // ── Primary branch (no prerelease) ──────────────────────────────────────────
+    // ── No-prerelease versions (parser never assigns Primary) ───────────────────
+    // Primary is a topology-derived role assigned by DetectionOnlySynthesis, not the parser.
+    // The parser sees only one example pair and cannot know topology — it returns the
+    // carrier/authority signal from the example, and detection promotes to Primary later.
 
     [Test]
-    public void Master_CleanVersion_InfersPrimaryRole()
+    public void Master_CleanVersion_InfersLabelCarrierWithEmptyLabel()
     {
         var result = _sut.Parse("master", "1.62.0");
 
-        result.Role.ShouldBe(BranchRole.Primary);
+        result.Role.ShouldBe(BranchRole.LabelCarrier);
         result.Label.ShouldBe(string.Empty);
     }
 
     [Test]
-    public void Main_CleanVersion_InfersPrimaryRole()
+    public void Main_CleanVersion_InfersLabelCarrierWithEmptyLabel()
     {
         var result = _sut.Parse("main", "1.62.0");
 
-        result.Role.ShouldBe(BranchRole.Primary);
+        result.Role.ShouldBe(BranchRole.LabelCarrier);
+    }
+
+    [Test]
+    public void Release_CleanVersion_InfersVersionAuthority()
+    {
+        // Regression: a release branch reaching its final clean version must still be
+        // classified as VersionAuthority (authority is a branch-pattern property, not a
+        // version-format property). Previously a missing '-' segment short-circuited to
+        // Primary via the early return — this test pins the corrected layering.
+        var result = _sut.Parse("release/1.62.0", "1.62.0");
+
+        result.Role.ShouldBe(BranchRole.VersionAuthority);
+        result.Label.ShouldBe(string.Empty);
+        result.SuggestedMode.ShouldBeNull();
+    }
+
+    [Test]
+    public void Parser_NeverReturnsPrimary()
+    {
+        // Layering invariant: Primary is not derivable from a single example.
+        // No (branchPattern, versionExample) input the parser can see should ever yield Primary.
+        (string Branch, string Version)[] inputs =
+        [
+            ("master", "1.2.3"),
+            ("main", "1.2.3"),
+            ("develop", "1.2.3-alpha.1"),
+            ("release/1.2.3", "1.2.3"),
+            ("release/1.2.3", "1.2.3-beta.1"),
+            ("feature/foo", "1.2.3-foo.1"),
+            ("hotfix/x", "1.2.3-x.1"),
+            ("bugfix/y", "1.2.3-y1")
+        ];
+
+        foreach (var (branch, version) in inputs)
+        {
+            var result = _sut.Parse(branch, version);
+            result.Role.ShouldNotBe(BranchRole.Primary, $"Parser must not assign Primary for ({branch}, {version})");
+        }
     }
 
     // ── Static label (carrier) ───────────────────────────────────────────────────
@@ -115,10 +156,12 @@ public class VersionExampleParserTests
     // ── Prims nominal cases ──────────────────────────────────────────────────────
 
     [Test]
-    public void PrimsMasterExample_InfersPrimary()
+    public void PrimsMasterExample_InfersLabelCarrier()
     {
+        // Parser returns LabelCarrier; Detection promotes master/main to Primary.
+        // See DetectionOnlySynthesisTests.PrimsNominalInputs_InfersMasterAsPrimary.
         var result = _sut.Parse("master", "1.62.0");
-        result.Role.ShouldBe(BranchRole.Primary);
+        result.Role.ShouldBe(BranchRole.LabelCarrier);
     }
 
     [Test]

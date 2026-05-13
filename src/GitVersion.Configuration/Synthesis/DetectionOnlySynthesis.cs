@@ -39,11 +39,26 @@ public sealed class DetectionOnlySynthesis(
         var inputs = pairs.Select(p => new SynthesisInput(
             p.BranchPattern,
             p.VersionExample,
-            p.VersionExample is null ? null : parser.Parse(p.BranchPattern, p.VersionExample)))
+            BuildInference(p.BranchPattern, p.VersionExample)))
             .ToList();
 
         var diagnostics = detector.Detect(topology, inputs);
 
         return new SynthesisDetectionResult(topology, inputs, diagnostics);
+    }
+
+    private VersionExampleInference? BuildInference(string branchPattern, string? versionExample)
+    {
+        if (versionExample is null)
+            return null;
+
+        var parsed = parser.Parse(branchPattern, versionExample);
+
+        // Layering: Primary is a topology-level role, not a parse-time signal.
+        // The parser returns LabelCarrier/VersionAuthority; detection promotes
+        // master/main to Primary using the single source of truth on TopologyClassifier.
+        return TopologyClassifier.IsPrimary(branchPattern)
+            ? parsed with { Role = BranchRole.Primary }
+            : parsed;
     }
 }

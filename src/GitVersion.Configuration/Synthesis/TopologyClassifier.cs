@@ -17,6 +17,13 @@ namespace GitVersion.Configuration.Synthesis;
 public sealed class TopologyClassifier
 {
     private static readonly Regex PrimaryBranch = new(@"^(main|master)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>
+    /// Topology-level primary-branch test. The single source of truth for what counts
+    /// as a primary branch across the synthesis pipeline — the parser MUST NOT make
+    /// this decision (it sees only one example pair and has no topology view).
+    /// </summary>
+    public static bool IsPrimary(string branchName) => PrimaryBranch.IsMatch(branchName);
     private static readonly Regex DevelopBranch = new(@"^dev(elop)?(ment)?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex ReleaseBranch = new(@"^releases?([/\-]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FeatureBranch = new(@"^features?([/\-]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);

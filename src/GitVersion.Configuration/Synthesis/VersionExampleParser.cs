@@ -31,12 +31,16 @@ public sealed class VersionExampleParser
     private static readonly Regex DotSeparatedPrerelease = new(@"^(?<label>[A-Za-z][A-Za-z0-9\-]*)\.(?<n>\d+)$", RegexOptions.Compiled);
     private static readonly Regex ManualDeploymentPrerelease = new(@"^(?<label>[A-Za-z][A-Za-z0-9\-]*)\.(?<n>\d+)\+(?<meta>\d+)$", RegexOptions.Compiled);
 
-    private static readonly VersionExampleInference PrimaryInference =
-        new(BranchRole.Primary, string.Empty, null);
-
     /// <summary>
     /// Infers label, role, and suggested deployment mode from a single example pair.
     /// </summary>
+    /// <remarks>
+    /// Layering invariant: this parser MUST NOT return <see cref="BranchRole.Primary"/>.
+    /// Primary is a topology-level role assigned by <see cref="DetectionOnlySynthesis"/>
+    /// after parsing, using <see cref="TopologyClassifier.IsPrimary(string)"/>. A single
+    /// example pair carries no topology signal, so the parser is only permitted to
+    /// classify <see cref="BranchRole.VersionAuthority"/> or <see cref="BranchRole.LabelCarrier"/>.
+    /// </remarks>
     /// <param name="branchPattern">
     /// Branch name pattern as the user supplied it, e.g. "develop", "feature/Login", "release/1.62.0".
     /// </param>
@@ -45,12 +49,13 @@ public sealed class VersionExampleParser
     /// </param>
     public VersionExampleInference Parse(string branchPattern, string versionExample)
     {
+        var role = InferRole(branchPattern, versionExample);
         var prereleaseMatch = PrereleasePattern.Match(versionExample);
+
         if (!prereleaseMatch.Success)
-            return PrimaryInference;
+            return new VersionExampleInference(role, string.Empty, null);
 
         var prerelease = prereleaseMatch.Groups["prerelease"].Value;
-        var role = InferRole(branchPattern, versionExample);
         var (label, mode) = InferLabelAndMode(branchPattern, prerelease);
 
         return new VersionExampleInference(role, label, mode);
