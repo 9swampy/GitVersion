@@ -165,12 +165,12 @@ public sealed class ConfigurationSemanticValidator
             "Deployment Mode Semantics Alignment",
             SemanticViolationSeverity.Advisory,
             branchName,
+            $"This configuration is valid. " +
             $"Branch '{branchName}' uses ContinuousDeployment mode while carrying the prerelease label '{branch.Label}'. " +
-            $"The label will appear in version output (e.g. 1.0.0-{branch.Label.Replace(ConfigurationConstants.BranchNamePlaceholder, "Name")}123), " +
-            "but each commit is still treated as a deployable version.",
-            "If this is intentional, no action is required. " +
-            "If prerelease versions should be explicitly distinguished from deployable releases, " +
-            "add mode: ContinuousDelivery to this branch configuration."));
+            $"GitVersion will include the label in version output (e.g. 1.0.0-{branch.Label.Replace(ConfigurationConstants.BranchNamePlaceholder, "Name")}123) " +
+            "while treating each commit as a deployable version.",
+            "No action is required. To model prerelease versions distinct from deployable releases, " +
+            "configure mode: ContinuousDelivery on this branch."));
     }
 
     private static bool IsShortLivedBranch(string branchName) =>
@@ -208,13 +208,14 @@ public sealed class ConfigurationSemanticValidator
             violations.Add(new SemanticViolation(
                 "SEM-006",
                 "Strategies Must Be Declared",
-                SemanticViolationSeverity.Warning,
+                SemanticViolationSeverity.Advisory,
                 null,
-                "No strategies block is declared. GitVersion's default strategy composition " +
-                "has changed across major versions and may silently change behaviour on upgrades.",
-                "Explicitly declare the strategies list. " +
-                "For GitFlow: [Fallback, ConfiguredNextVersion, MergeMessage, TaggedCommit, TrackReleaseBranches, VersionInBranchName]. " +
-                "For TrunkBased: [ConfiguredNextVersion, Mainline]."));
+                "This configuration is valid. No strategies block is declared; GitVersion will use its built-in defaults. " +
+                "The default strategy set has changed across major versions, so behaviour may change silently on upgrade.",
+                "No action is required. To lock strategy behaviour across GitVersion upgrades, " +
+                "declare the strategies list explicitly — for GitFlow: " +
+                "[Fallback, ConfiguredNextVersion, MergeMessage, TaggedCommit, TrackReleaseBranches, VersionInBranchName]; " +
+                "for TrunkBased: [ConfiguredNextVersion, Mainline]."));
         }
     }
 
@@ -227,12 +228,14 @@ public sealed class ConfigurationSemanticValidator
             violations.Add(new SemanticViolation(
                 "SEM-007",
                 "Increment Strategy Totality",
-                SemanticViolationSeverity.Warning,
+                SemanticViolationSeverity.Advisory,
                 branchName,
-                $"Branch '{branchName}' uses increment: Inherit but declares no source-branches. " +
-                "There is no parent context to inherit from; GitVersion will fall back to " +
-                "its internal defaults, which may change across versions.",
-                "Add at least one entry to source-branches, e.g. source-branches: [main]."));
+                $"This configuration is valid. Branch '{branchName}' uses increment: Inherit with no source-branches declared. " +
+                "GitVersion will fall back to its internal defaults for increment resolution, " +
+                "which may change across versions.",
+                "No action is required. To make the inheritance chain explicit and stable across " +
+                "GitVersion upgrades, declare at least one source-branches entry, " +
+                "e.g. source-branches: [main]."));
         }
     }
 }

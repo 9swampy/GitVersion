@@ -60,7 +60,7 @@ public class PrimsEstateSemanticViolationTests
 
         violations.Count.ShouldBe(1);
         violations[0].BranchName.ShouldBeNull();
-        violations[0].Severity.ShouldBe(SemanticViolationSeverity.Warning);
+        violations[0].Severity.ShouldBe(SemanticViolationSeverity.Advisory);
     }
 
     [TestCase(PrimsFoundationYaml, TestName = "Foundation")]
