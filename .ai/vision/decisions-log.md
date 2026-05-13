@@ -5,6 +5,28 @@ Each entry records what was decided, why, and what it replaced or superseded.
 
 ---
 
+## DEC-017: IncrementSource Retained as Intake-Captured Scaffold (2026-05-13)
+
+**Decision:** `IncrementSource` is classified as a **dead field** in the current synthesis pipeline (no upstream reader, no downstream emitter), with disposition **RETAIN** on the basis of documented intent.
+
+**Evidence (consumer-evidence audit under CJE-V3 §C.3.1):**
+- Downstream: `YamlEmitter` contains zero references to `IncrementSource`; emitted YAML never carries the value.
+- Upstream: `SemanticMapper.Map(detection, incrementSource)` stores the parameter on `SynthesisConfig` and otherwise ignores it. Strategy selection keys off `Topology.Kind`, not `IncrementSource`.
+
+**Documented intent (bounded search of `.ai/handoffs/`):**
+- `GV-SEM-VAL-appendix-b.md` Layer 2 names "increment sources" as one of four semantic axes synthesis derives.
+- `GV-SEM-VAL-appendix-b.md` Layer 3 explicit-overrides lists "Increment source is commits, not merges" as a structured override.
+- `GV-SEM-VAL-appendix-b.md` §B.9 Risk-1 prescribes F-002 when fewer than two signals support an inferred increment source.
+- `FAILURE-UX-CONTRACTS.md` F-001/F-002 ask the user to specify increment source explicitly, with candidate values mirroring the four `IncrementSource` enum members.
+
+**Action:** XML doc on `SynthesisConfig.IncrementSource` and `SemanticMapper.Map`'s `incrementSource` parameter rewritten to record the intentional intake-vs-emission asymmetry, so the field cannot be mistaken for dead state by future audits.
+
+**Framework note (§C.3.1a — classification vs disposition):** Classification is evidence-based and definite (DEAD). Disposition is intent-aware and decided per session (RETAIN, pending emission iteration). Future revisits should re-run the consumer-evidence audit and update only the disposition.
+
+**Why:** Prevents two failure modes — (1) silent retention of inert API surface under "might be used later," and (2) premature removal of intentional scaffolding that breaks an in-flight design contract.
+
+---
+
 ## DEC-016: Advisory Rule Contract ARC-001 — Structural Constraints on Advisory Text (2026-05-13)
 
 **An advisory MUST:**
