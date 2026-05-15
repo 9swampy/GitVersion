@@ -59,28 +59,32 @@ already-shipped configuration docs is in scope and additive.
 
 ### Stack 3 — `synthesise` CLI verb
 
-- [ ] **GV-IMP-003a**: Add `Arguments.SynthesiseConfig` flag and parser switch
-  for `/synthesise` (mirrors the `/validate` shape).
-- [ ] **GV-IMP-003b**: Add `--intake <path>` argument resolution for the
-  JSON intake file.
-- [ ] **GV-IMP-003c**: Wire `GitVersionExecutor.RunSynthesis` reading
-  `intake.json`, invoking `DetectionOnlySynthesis` + `SemanticMapper` +
-  `YamlEmitter`, emitting YAML to stdout (text) or `{ yaml, diagnostics }`
-  (JSON) with exit code 0/1.
-- [ ] **GV-IMP-003d**: Document the `gitversion /synthesise` CLI surface in
-  `arguments.md` and the HelpWriterTests lookup.
-- [ ] **GV-IMP-003e**: In-process integration tests (class-per-scenario,
-  binary-falsifiable predicates per [coding-and-testing-standards]) for clean
-  intake, ambiguity diagnostic (F-001..F-005), and JSON output shape.
-- [ ] **GV-IMP-003f**: Subprocess wire test (golden path + ambiguous-intake
-  exit 1).
+_The original six-sub-item split (003a–f) over-fragmented atomicity: a
+parser switch with no executor wiring leaves the binary in a state where
+the field exists but does nothing user-visible. Consolidated to three
+sub-commits, each one a complete logical step that leaves the build green:_
+
+- [x] **GV-IMP-003a**: Wire `/synthesise` and `/intake` switches through the
+  CLI parser into `ConfigurationInfo`. Parser tests (both spellings + value
+  capture). `HelpWriterTests` temporarily ignores the new fields — help
+  docs land in 003c. _Landed `98af3b964` on `feat/canonical-gitflow-adr001`._
+- [ ] **GV-IMP-003b**: Wire `GitVersionExecutor.RunSynthesis` reading the
+  intake JSON, invoking `DetectionOnlySynthesis` + `SemanticMapper` +
+  `YamlEmitter`, emitting YAML or `{ yaml, diagnostics }` with exit code
+  0/1. Add in-process integration tests (class-per-scenario,
+  binary-falsifiable predicates) for clean intake, ambiguity diagnostic
+  (F-001..F-005), and JSON output shape.
+- [ ] **GV-IMP-003c**: Document the CLI surface in
+  `docs/input/docs/usage/cli/arguments.md`, add the `HelpWriterTests`
+  lookup entries (removing the temporary `ignored` entries from 003a),
+  and add subprocess wire tests (golden path + ambiguous-intake exit 1).
 
 **Why:** headline ask from the experience writeup. The synthesis library on
 `feat/canonical-gitflow-adr001` is currently in-process C# with no public
 entry point — its consumer (the agent / CI user wanting declarative-intent
 config) is concrete and demonstrated.
 
-**Why stack 3:** non-trivial scope; split into six commits so each can be
+**Why stack 3:** non-trivial scope; split into three commits so each can be
 reviewed as an atomic unit and the stack as a whole can be cherry-picked or
 dropped without disturbing Stacks 1 or 2.
 
