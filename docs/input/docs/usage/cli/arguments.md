@@ -55,6 +55,22 @@ GitVersion [path]
                     Exit code 1 = one or more errors found.
                     Use /output json for machine-readable output.
                     Use /config to specify a non-default config file path.
+    /synthesise     Generates a minimal GitVersion.yml from a JSON intake
+                    file declaring branch patterns paired with version
+                    examples. Mutually exclusive with normal version
+                    calculation. Does not require a git repository.
+                    Requires /intake <path>. /synthesize is an accepted
+                    alias for the US spelling.
+                    Exit code 0 = YAML written to stdout.
+                    Exit code 1 = intake malformed, missing, or
+                    under-determined (an F-001 through F-005 diagnostic
+                    is emitted instead).
+                    Use /output json for {"yaml": "...", "diagnostics": [...]}
+                    output suitable for CI pipelines.
+    /intake         Path to the JSON intake file for /synthesise. The file
+                    declares an incrementSource (BranchName, TagOnly,
+                    CommitMessage, or BranchNameAndCommitMessage) and a
+                    branches array of {pattern, example} pairs.
     /overrideconfig Overrides GitVersion config values inline (semicolon-
                     separated key value pairs e.g. /overrideconfig
                     tag-prefix=Foo)
