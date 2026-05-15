@@ -68,12 +68,13 @@ sub-commits, each one a complete logical step that leaves the build green:_
   CLI parser into `ConfigurationInfo`. Parser tests (both spellings + value
   capture). `HelpWriterTests` temporarily ignores the new fields — help
   docs land in 003c. _Landed `98af3b964` on `feat/canonical-gitflow-adr001`._
-- [ ] **GV-IMP-003b**: Wire `GitVersionExecutor.RunSynthesis` reading the
+- [x] **GV-IMP-003b**: Wire `GitVersionExecutor.RunSynthesis` reading the
   intake JSON, invoking `DetectionOnlySynthesis` + `SemanticMapper` +
   `YamlEmitter`, emitting YAML or `{ yaml, diagnostics }` with exit code
   0/1. Add in-process integration tests (class-per-scenario,
   binary-falsifiable predicates) for clean intake, ambiguity diagnostic
-  (F-001..F-005), and JSON output shape.
+  (F-001..F-005), and JSON output shape. _Landed `f5f63acea` on
+  `feat/canonical-gitflow-adr001`; 22 new scenario tests pass._
 - [ ] **GV-IMP-003c**: Document the CLI surface in
   `docs/input/docs/usage/cli/arguments.md`, add the `HelpWriterTests`
   lookup entries (removing the temporary `ignored` entries from 003a),
