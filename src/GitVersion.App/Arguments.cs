@@ -22,6 +22,8 @@ internal class Arguments
     public bool IsVersion;
     public bool IsHelp;
     public bool ValidateConfig;
+    public bool SynthesiseConfig;
+    public string? SynthesiseIntakeFile;
 
     public bool NoFetch;
     public bool NoCache;
@@ -65,7 +67,9 @@ internal class Arguments
                 ConfigurationFile = ConfigurationFile,
                 OverrideConfiguration = OverrideConfiguration,
                 ShowConfiguration = ShowConfiguration,
-                ValidateConfiguration = ValidateConfig
+                ValidateConfiguration = ValidateConfig,
+                SynthesiseConfiguration = SynthesiseConfig,
+                SynthesiseIntakeFile = SynthesiseIntakeFile
             },
 
             RepositoryInfo =

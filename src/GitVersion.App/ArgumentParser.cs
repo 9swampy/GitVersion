@@ -302,8 +302,21 @@ internal class ArgumentParser(IEnvironment environment,
             return true;
         }
 
-        if (!name.IsSwitch("validate")) return false;
-        arguments.ValidateConfig = true;
+        if (name.IsSwitch("validate"))
+        {
+            arguments.ValidateConfig = true;
+            return true;
+        }
+
+        if (name.IsSwitch("synthesise") || name.IsSwitch("synthesize"))
+        {
+            arguments.SynthesiseConfig = true;
+            return true;
+        }
+
+        if (!name.IsSwitch("intake")) return false;
+        EnsureArgumentValueCount(values);
+        arguments.SynthesiseIntakeFile = value;
         return true;
     }
 

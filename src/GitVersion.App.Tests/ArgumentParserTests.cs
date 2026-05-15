@@ -824,4 +824,28 @@ public class ArgumentParserTests : TestBase
 
         arguments.ValidateConfig.ShouldBeTrue();
     }
+
+    [Test]
+    public void SynthesiseSwitch_SetsSynthesiseConfigFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/synthesise");
+
+        arguments.SynthesiseConfig.ShouldBeTrue();
+    }
+
+    [Test]
+    public void SynthesizeSwitch_AmericanSpelling_AlsoSetsSynthesiseConfigFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/synthesize");
+
+        arguments.SynthesiseConfig.ShouldBeTrue();
+    }
+
+    [Test]
+    public void IntakeSwitch_SetsSynthesiseIntakeFilePath()
+    {
+        var arguments = this.argumentParser.ParseArguments("/intake /tmp/intake.json");
+
+        arguments.SynthesiseIntakeFile.ShouldBe("/tmp/intake.json");
+    }
 }
