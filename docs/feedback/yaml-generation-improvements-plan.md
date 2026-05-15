@@ -27,7 +27,7 @@ independently if the upstream PR is later split.
 
 ### Stack 1 — `global.json` rollForward
 
-- [ ] **GV-IMP-001**: Add `"rollForward": "latestFeature"` to `global.json`.
+- [x] **GV-IMP-001**: Add `"rollForward": "latestFeature"` to `global.json`. _Landed `62020da56` on `feat/canonical-gitflow-adr001`._
 
 **Why:** the experience writeup hit the exact-pin failure on first invocation
 (SDK 10.0.203 not installed; only 10.0.201 present at the time; the system
