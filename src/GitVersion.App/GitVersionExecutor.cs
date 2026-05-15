@@ -112,6 +112,22 @@ internal class GitVersionExecutor(
             return 1;
         }
 
+        // System.Text.Json does not honour non-nullable record-parameter annotations
+        // at deserialisation time: a missing "pattern" field yields a null Pattern.
+        // Without this guard the null propagates to TopologyClassifier.Classify
+        // and crashes with a raw ArgumentNullException before any diagnostic
+        // surface can intercept. Surface the gap as a structured intake error.
+        for (var i = 0; i < intake.Branches.Count; i++)
+        {
+            if (intake.Branches[i].Pattern is null)
+            {
+                this.console.WriteLine(
+                    $"gitversion /synthesise: intake at '{intakePath}' has a branch entry " +
+                    $"(index {i}) missing the required 'pattern' field.");
+                return 1;
+            }
+        }
+
         var detection = new DetectionOnlySynthesis().Detect(
             intake.Branches.Select(b => (b.Pattern, b.Example)));
 

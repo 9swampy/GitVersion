@@ -202,4 +202,30 @@ public static class SynthesiseCommand
         [Test] public void Output_RequiresAtLeastOneBranch() =>
             Output.ShouldContain("must declare at least one branch");
     }
+
+    [TestFixture]
+    public class WhenBranchEntryIsMissingPattern : ScenarioFixture
+    {
+        // Regression: an intake entry without a "pattern" field deserialises with
+        // SynthesisIntakeBranch.Pattern == null despite the non-nullable annotation.
+        // Without a guard this would crash inside BranchFamilyKey.Derive(null) with
+        // a raw ArgumentNullException — the same diagnostic-free crash class the
+        // experience writeup flagged for the loader-NRE on `branches.X: null`.
+        protected override string IntakeJson =>
+            """
+            {
+              "incrementSource": "BranchName",
+              "branches": [
+                { "pattern": "master", "example": "1.0.0" },
+                { "example": "1.1.0-Login.1" }
+              ]
+            }
+            """;
+
+        [Test] public void ExitCode_IsOne() => ExitCode.ShouldBe(1);
+        [Test] public void Output_NamesTheMissingField() =>
+            Output.ShouldContain("pattern");
+        [Test] public void Output_DoesNotContainRawExceptionStackTrace() =>
+            Output.ShouldNotContain("at GitVersion.Configuration.Synthesis.BranchFamilyKey");
+    }
 }
