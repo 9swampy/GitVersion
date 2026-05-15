@@ -1,6 +1,8 @@
 using System.IO.Abstractions;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using GitVersion.Configuration;
+using GitVersion.Configuration.Synthesis;
 using GitVersion.Configuration.Validation;
 using GitVersion.Extensions;
 using GitVersion.Git;
@@ -40,6 +42,9 @@ internal class GitVersionExecutor(
     {
         Initialize(gitVersionOptions);
 
+        if (gitVersionOptions.ConfigurationInfo.SynthesiseConfiguration)
+            return RunSynthesis(gitVersionOptions);
+
         if (gitVersionOptions.ConfigurationInfo.ValidateConfiguration)
             return RunValidation(gitVersionOptions);
 
@@ -54,6 +59,120 @@ internal class GitVersionExecutor(
         }
 
         return exitCode;
+    }
+
+    private static readonly JsonSerializerOptions SynthesisJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    /// <summary>
+    /// Drives the detection-only synthesis pipeline from a JSON intake file and
+    /// emits either the synthesised YAML or the structured diagnostics that
+    /// blocked synthesis. Exit code 0 indicates a YAML was produced; exit code 1
+    /// indicates the intake was malformed or under-determined and no YAML was
+    /// emitted.
+    /// </summary>
+    private int RunSynthesis(GitVersionOptions gitVersionOptions)
+    {
+        var intakePath = gitVersionOptions.ConfigurationInfo.SynthesiseIntakeFile;
+        if (string.IsNullOrEmpty(intakePath))
+        {
+            this.console.WriteLine(
+                "gitversion /synthesise: required argument /intake <path> not provided.");
+            return 1;
+        }
+
+        if (!this.fileSystem.File.Exists(intakePath))
+        {
+            this.console.WriteLine(
+                $"gitversion /synthesise: intake file not found at '{intakePath}'.");
+            return 1;
+        }
+
+        SynthesisIntake? intake;
+        try
+        {
+            var json = this.fileSystem.File.ReadAllText(intakePath);
+            intake = JsonSerializer.Deserialize<SynthesisIntake>(json, SynthesisJsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            this.console.WriteLine(
+                $"gitversion /synthesise: intake JSON malformed at '{intakePath}': {ex.Message}");
+            return 1;
+        }
+
+        if (intake is null || intake.Branches is null || intake.Branches.Count == 0)
+        {
+            this.console.WriteLine(
+                $"gitversion /synthesise: intake at '{intakePath}' must declare at least one branch.");
+            return 1;
+        }
+
+        var detection = new DetectionOnlySynthesis().Detect(
+            intake.Branches.Select(b => (b.Pattern, b.Example)));
+
+        if (!detection.IsSuccessful)
+        {
+            EmitSynthesisFailure(gitVersionOptions, detection.Diagnostics);
+            return 1;
+        }
+
+        var synthConfig = new SemanticMapper().Map(detection, intake.IncrementSource);
+        var yaml = new YamlEmitter().Emit(synthConfig);
+
+        EmitSynthesisSuccess(gitVersionOptions, yaml);
+        return 0;
+    }
+
+    private void EmitSynthesisSuccess(GitVersionOptions gitVersionOptions, string yaml)
+    {
+        if (gitVersionOptions.Output.Contains(OutputType.Json))
+        {
+            var payload = new
+            {
+                yaml,
+                diagnostics = Array.Empty<object>()
+            };
+            this.console.WriteLine(JsonSerializer.Serialize(payload, SynthesisJsonOptions));
+            return;
+        }
+
+        this.console.Write(yaml);
+    }
+
+    private void EmitSynthesisFailure(GitVersionOptions gitVersionOptions, IReadOnlyList<SynthesisDiagnostic> diagnostics)
+    {
+        if (gitVersionOptions.Output.Contains(OutputType.Json))
+        {
+            var payload = new
+            {
+                yaml = (string?)null,
+                diagnostics = diagnostics.Select(d => new
+                {
+                    code = d.Code,
+                    branchPattern = d.BranchPattern,
+                    message = d.Message,
+                    fields = d.Fields
+                })
+            };
+            this.console.WriteLine(JsonSerializer.Serialize(payload, SynthesisJsonOptions));
+            return;
+        }
+
+        this.console.WriteLine("GitVersion Configuration Synthesis" + FileSystemHelper.Path.NewLine);
+        foreach (var d in diagnostics)
+        {
+            var branch = d.BranchPattern is not null ? $"  branch '{d.BranchPattern}'" : "  (intake)";
+            this.console.WriteLine($"❌  {d.Code}{branch}");
+            this.console.WriteLine(d.Message);
+            this.console.WriteLine(string.Empty);
+        }
+        this.console.WriteLine("─────────────────────────────────────────────────────────────────");
+        this.console.WriteLine($"  {diagnostics.Count} diagnostic{(diagnostics.Count == 1 ? "" : "s")} — no configuration synthesised.");
     }
 
     private int RunValidation(GitVersionOptions gitVersionOptions)

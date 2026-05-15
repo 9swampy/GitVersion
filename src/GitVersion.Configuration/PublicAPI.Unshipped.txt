@@ -1,4 +1,32 @@
 #nullable enable
 GitVersion.Configuration.Synthesis.BranchFamilyKey
+GitVersion.Configuration.Synthesis.SynthesisIntake
+GitVersion.Configuration.Synthesis.SynthesisIntake.<Clone>$() -> GitVersion.Configuration.Synthesis.SynthesisIntake!
+GitVersion.Configuration.Synthesis.SynthesisIntake.Branches.get -> System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisIntakeBranch!>!
+GitVersion.Configuration.Synthesis.SynthesisIntake.Branches.init -> void
+GitVersion.Configuration.Synthesis.SynthesisIntake.Deconstruct(out GitVersion.Configuration.Synthesis.IncrementSource IncrementSource, out System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisIntakeBranch!>! Branches) -> void
+GitVersion.Configuration.Synthesis.SynthesisIntake.Equals(GitVersion.Configuration.Synthesis.SynthesisIntake? other) -> bool
+GitVersion.Configuration.Synthesis.SynthesisIntake.IncrementSource.get -> GitVersion.Configuration.Synthesis.IncrementSource
+GitVersion.Configuration.Synthesis.SynthesisIntake.IncrementSource.init -> void
+GitVersion.Configuration.Synthesis.SynthesisIntake.SynthesisIntake(GitVersion.Configuration.Synthesis.IncrementSource IncrementSource, System.Collections.Generic.IReadOnlyList<GitVersion.Configuration.Synthesis.SynthesisIntakeBranch!>! Branches) -> void
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.<Clone>$() -> GitVersion.Configuration.Synthesis.SynthesisIntakeBranch!
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.Deconstruct(out string! Pattern, out string? Example) -> void
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.Equals(GitVersion.Configuration.Synthesis.SynthesisIntakeBranch? other) -> bool
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.Example.get -> string?
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.Example.init -> void
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.Pattern.get -> string!
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.Pattern.init -> void
+GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.SynthesisIntakeBranch(string! Pattern, string? Example) -> void
+override GitVersion.Configuration.Synthesis.SynthesisIntake.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.SynthesisIntake.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.SynthesisIntake.ToString() -> string!
+override GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.Equals(object? obj) -> bool
+override GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.GetHashCode() -> int
+override GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.ToString() -> string!
 static GitVersion.Configuration.Synthesis.BranchFamilyKey.Derive(string! branchPattern) -> string!
+static GitVersion.Configuration.Synthesis.SynthesisIntake.operator !=(GitVersion.Configuration.Synthesis.SynthesisIntake? left, GitVersion.Configuration.Synthesis.SynthesisIntake? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisIntake.operator ==(GitVersion.Configuration.Synthesis.SynthesisIntake? left, GitVersion.Configuration.Synthesis.SynthesisIntake? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.operator !=(GitVersion.Configuration.Synthesis.SynthesisIntakeBranch? left, GitVersion.Configuration.Synthesis.SynthesisIntakeBranch? right) -> bool
+static GitVersion.Configuration.Synthesis.SynthesisIntakeBranch.operator ==(GitVersion.Configuration.Synthesis.SynthesisIntakeBranch? left, GitVersion.Configuration.Synthesis.SynthesisIntakeBranch? right) -> bool
 static GitVersion.Configuration.Synthesis.TopologyClassifier.IsPrimary(string! branchName) -> bool
