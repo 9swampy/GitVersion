@@ -42,10 +42,10 @@ on machines that already have 10.0.300. Easy to drop or land independently.
 
 ### Stack 2 — Document the never-match regex idiom for preset suppression
 
-- [ ] **GV-IMP-002**: Add a documented idiom for removing a preset-shipped
+- [x] **GV-IMP-002**: Add a documented idiom for removing a preset-shipped
   branch family from an effective config, including the matching
   `is-release-branch: false` + `label: ''` consistency requirements that the
-  validator enforces.
+  validator enforces. _Landed `e52edc852` on `feat/canonical-gitflow-adr001`._
 
 **Why:** the experience writeup demonstrated that `branchName: null` NREs the
 loader and that contributors reach for `(?!x)x` folklore. The loader-NRE fix
