@@ -75,10 +75,17 @@ sub-commits, each one a complete logical step that leaves the build green:_
   binary-falsifiable predicates) for clean intake, ambiguity diagnostic
   (F-001..F-005), and JSON output shape. _Landed `f5f63acea` on
   `feat/canonical-gitflow-adr001`; 22 new scenario tests pass._
-- [ ] **GV-IMP-003c**: Document the CLI surface in
+- [x] **GV-IMP-003c**: Document the CLI surface in
   `docs/input/docs/usage/cli/arguments.md`, add the `HelpWriterTests`
   lookup entries (removing the temporary `ignored` entries from 003a),
   and add subprocess wire tests (golden path + ambiguous-intake exit 1).
+  _Landed `2bec2c488` on `feat/canonical-gitflow-adr001`. Also fixed a
+  parser-extensions bug discovered by the subprocess tests:
+  `synthesise`/`synthesize` were missing from the
+  `ArgumentRequiresValue` boolean-arguments list, causing the parser to
+  greedily consume `/intake` as the value of `/synthesise`. The
+  in-process tests passed because they constructed `GitVersionOptions`
+  directly, bypassing the parser. App.Tests at 274/274._
 
 **Why:** headline ask from the experience writeup. The synthesis library on
 `feat/canonical-gitflow-adr001` is currently in-process C# with no public
