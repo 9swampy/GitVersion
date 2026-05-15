@@ -447,6 +447,36 @@ ignore:
 <sup><a href='/docs/workflows/TrunkBased/preview1.yml#L1-L101' title='Snippet source file'>snippet source</a> | <a href='#snippet-/docs/workflows/TrunkBased/preview1.yml' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
+### Customising a workflow preset
+
+A `workflow:` declaration brings the preset's full branch configuration with
+it — including all the preset's named branch families (e.g. `feature`,
+`hotfix`, `pull-request`, `unknown` in `TrunkBased/preview1`). To customise
+the preset you override individual fields under the matching
+`branches.<name>` key; the override merges with the preset value.
+
+To **remove** a preset-shipped branch family from the effective configuration,
+keep its entry in `branches:` but override its `regex` to a pattern that
+cannot match. The idiom `(?!x)x` is a negative lookahead asserting "x and
+not x" — an unsatisfiable assertion that prevents any branch from matching
+the entry. Pair this with explicit `is-release-branch: false` and `label: ''`
+overrides so the suppressed entry remains internally consistent — otherwise
+`gitversion /validate` will flag the preset's inherited
+`is-release-branch: true` and `label: '{BranchName}'` as contradictory
+(SEM-001, SEM-003).
+
+```yaml
+workflow: TrunkBased/preview1
+branches:
+  hotfix:
+    regex: '(?!x)x'
+    is-release-branch: false
+    label: ''
+```
+
+This pattern is preferable to `branches.<name>: null`, which the
+configuration loader does not currently handle.
+
 The details of the available options are as follows:
 
 ### workflow
