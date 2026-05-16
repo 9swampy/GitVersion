@@ -101,18 +101,30 @@ dropped without disturbing Stacks 1 or 2.
 `src/GitVersion.App.Tests/SynthesiseCommand*.cs`,
 `docs/input/docs/usage/cli/arguments.md`.
 
-### Stack 4 — `/validate --explain` (deferred decision)
+### Stack 4 — `/validate --explain` (design pass complete; implementation pending decision)
 
-- [ ] **GV-IMP-004**: TBC — pending design pass. The experience writeup asked
-  for `/validate --explain` to show *which preset fields* pulled a branch
-  into a contradictory state. Implementing this requires correlating the
-  resolved configuration against the preset's contributions, which is a
-  larger surface than the current validator's `IGitVersionConfiguration`
-  input. Decision: classify and stage in a separate plan once Stack 3 is
-  landed.
+- [ ] **GV-IMP-004**: Design pass complete — see
+  [`.ai/design/stack-4-explain-design.md`](../../.ai/design/stack-4-explain-design.md).
+  Three approaches considered; Option C (dictionary-lookup against
+  `IConfigurationProvider.ResolveProvenance`) selected as the smallest
+  viable shape. Three sub-commits proposed: 4a parser flag, 4b provider
+  surface + provenance record, 4c executor wiring + tests + docs.
+  **Awaiting maintainer go/no-go.**
 
-**Why stack 4 last:** scope unclear; risks bloating the PR if pulled in
-without a clean abstraction.
+  The original deferral text below is preserved as historical context:
+
+  > _The experience writeup asked
+  > for `/validate --explain` to show which preset fields pulled a branch
+  > into a contradictory state. Implementing this requires correlating the
+  > resolved configuration against the preset's contributions, which is a
+  > larger surface than the current validator's `IGitVersionConfiguration`
+  > input. Decision: classify and stage in a separate plan once Stack 3 is
+  > landed._
+
+**Why stack 4 last:** scope is now bounded by the design note's
+recommendation but the new public surface (`ConfigurationProvenance`
+record + provider method) crosses an abstraction boundary that warrants
+maintainer review before implementation begins.
 
 ## Out of branch scope
 
