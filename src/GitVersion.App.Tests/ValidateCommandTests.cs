@@ -72,11 +72,16 @@ public static class ValidateCommand
 
         protected abstract string Yaml { get; }
         protected virtual bool EmitAsJson => false;
+        protected virtual bool Explain => false;
 
         [OneTimeSetUp]
         public void Arrange_Act()
         {
-            TempDir = FileSystemHelper.Path.Combine(FileSystemHelper.Path.GetTempPath(),
+            // /tmp literal rather than Path.GetTempPath(): under the test
+            // runner GetTempPath resolves inside the repo's bin directory,
+            // which lets FindGitDir walk to the repo's own .gitversion.yml
+            // and pollute fixtures that depend on no config being present.
+            TempDir = FileSystemHelper.Path.Combine("/tmp",
                 "gv-validate-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(TempDir);
             File.WriteAllText(FileSystemHelper.Path.Combine(TempDir, "GitVersion.yml"), Yaml);
@@ -92,7 +97,11 @@ public static class ValidateCommand
             var options = Options.Create(new GitVersionOptions
             {
                 WorkingDirectory = TempDir,
-                ConfigurationInfo = { ValidateConfiguration = true },
+                ConfigurationInfo =
+                {
+                    ValidateConfiguration = true,
+                    ExplainProvenance = Explain
+                },
                 Output = EmitAsJson
                     ? new HashSet<OutputType> { OutputType.Json }
                     : new HashSet<OutputType>()
@@ -101,7 +110,7 @@ public static class ValidateCommand
             IServiceCollection services = new ServiceCollection();
             services.AddModule(new GitVersionCoreTestModule());
             services.AddModule(new GitVersionAppModule());
-            services.AddSingleton(options);
+            services.AddSingleton<IOptions<GitVersionOptions>>(options);
             services.AddSingleton<IConsole>(new TestConsoleAdapter(ConsoleBuffer));
 
             using var sp = services.BuildServiceProvider();
@@ -156,5 +165,58 @@ public static class ValidateCommand
         [Test] public void Json_ValidIsTrue() => Root["valid"]!.GetValue<bool>().ShouldBeTrue();
         [Test] public void Json_SummaryErrorsIsZero() => Root["summary"]!["errors"]!.GetValue<int>().ShouldBe(0);
         [Test] public void Json_ViolationsArrayIsEmpty() => Root["violations"]!.AsArray().Count.ShouldBe(0);
+    }
+
+    [TestFixture]
+    public class WhenExplainRequestedOnInvalidConfig : ScenarioFixture
+    {
+        // SEM-001 trigger: master claims is-release-branch=true on a regex
+        // that has no version pattern. Both fields are user-supplied
+        // (set in your GitVersion.yml).
+        protected override string Yaml => InvalidSem001Yaml;
+        protected override bool Explain => true;
+
+        [Test] public void ExitCode_IsOne() => ExitCode.ShouldBe(1);
+        [Test] public void Output_EmitsSourceLineForViolation() =>
+            Output.ShouldContain("Source:");
+        [Test] public void Output_NamesTheOffendingField() =>
+            Output.ShouldContain("is-release-branch");
+        [Test] public void Output_AttributesUserConfigSource() =>
+            Output.ShouldContain("set in your GitVersion.yml");
+    }
+
+    [TestFixture]
+    public class WhenExplainRequestedWithJsonOutput : ScenarioFixture
+    {
+        protected override string Yaml => InvalidSem001Yaml;
+        protected override bool Explain => true;
+        protected override bool EmitAsJson => true;
+
+        private JsonNode Root => JsonNode.Parse(Output)!;
+        private JsonNode FirstViolation => Root["violations"]!.AsArray()[0]!;
+        private JsonNode FirstSource => FirstViolation["source"]!;
+
+        [Test] public void ExitCode_IsOne() => ExitCode.ShouldBe(1);
+        [Test] public void Json_FirstViolation_HasSourceObject() =>
+            FirstViolation["source"].ShouldNotBeNull();
+        [Test] public void Json_FirstViolationSource_HasFieldNamed() =>
+            FirstSource["field"]!.GetValue<string>().ShouldNotBeNullOrWhiteSpace();
+        [Test] public void Json_FirstViolationSource_HasOriginNamed() =>
+            FirstSource["origin"]!.GetValue<string>().ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [TestFixture]
+    public class WhenExplainNotRequested_JsonSchemaUnchanged : ScenarioFixture
+    {
+        // Backwards-compat anchor: pre-Stack-4 JSON consumers should see no
+        // source field on violations when /explain is absent.
+        protected override string Yaml => InvalidSem001Yaml;
+        protected override bool EmitAsJson => true;
+
+        private JsonNode Root => JsonNode.Parse(Output)!;
+        private JsonNode FirstViolation => Root["violations"]!.AsArray()[0]!;
+
+        [Test] public void Json_FirstViolation_HasNoSourceKey() =>
+            FirstViolation.AsObject().ContainsKey("source").ShouldBeFalse();
     }
 }

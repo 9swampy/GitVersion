@@ -55,6 +55,15 @@ GitVersion [path]
                     Exit code 1 = one or more errors found.
                     Use /output json for machine-readable output.
                     Use /config to specify a non-default config file path.
+                    Use /explain to surface which source supplied each
+                    offending field.
+    /explain        Modifier for /validate. Adds a Source: line to each
+                    violation naming the field most directly responsible
+                    and the source that supplied it (preset workflow,
+                    your GitVersion.yml, /overrideconfig, or internal
+                    defaults). In JSON mode each violation gains a
+                    source: { field, origin } object. No effect when
+                    used without /validate.
     /synthesise     Generates a minimal GitVersion.yml from a JSON intake
                     file declaring branch patterns paired with version
                     examples. Mutually exclusive with normal version

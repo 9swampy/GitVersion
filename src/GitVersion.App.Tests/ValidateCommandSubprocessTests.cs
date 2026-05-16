@@ -66,6 +66,7 @@ public static class ValidateCommandSubprocess
         protected ExecutionResults Result = null!;
 
         protected abstract string Yaml { get; }
+        protected virtual string AdditionalArgs => string.Empty;
 
         [OneTimeSetUp]
         public void Arrange_Act()
@@ -75,7 +76,7 @@ public static class ValidateCommandSubprocess
             Directory.CreateDirectory(TempDir);
             File.WriteAllText(FileSystemHelper.Path.Combine(TempDir, "GitVersion.yml"), Yaml);
 
-            Result = GitVersionHelper.ExecuteIn(TempDir, " /validate", logToFile: false);
+            Result = GitVersionHelper.ExecuteIn(TempDir, $" /validate{AdditionalArgs}", logToFile: false);
         }
 
         [OneTimeTearDown]
@@ -107,5 +108,16 @@ public static class ValidateCommandSubprocess
         [Test] public void ExitCode_IsOne() => Result.ExitCode.ShouldBe(1);
         [Test] public void Output_DeclaresValidFalse() => Result.Output!.ShouldContain("\"valid\": false");
         [Test] public void Output_ContainsRuleIdSem001() => Result.Output!.ShouldContain("SEM-001");
+    }
+
+    [TestFixture]
+    public class WhenSubprocessValidatesWithExplain : ScenarioFixture
+    {
+        protected override string Yaml => InvalidSem001Yaml;
+        protected override string AdditionalArgs => " /explain";
+
+        [Test] public void ExitCode_IsOne() => Result.ExitCode.ShouldBe(1);
+        [Test] public void Output_ContainsSourceField() => Result.Output!.ShouldContain("\"source\":");
+        [Test] public void Output_AttributesUserConfigOrigin() => Result.Output!.ShouldContain("set in your GitVersion.yml");
     }
 }

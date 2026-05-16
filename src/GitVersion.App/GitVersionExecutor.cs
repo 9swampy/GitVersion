@@ -212,19 +212,79 @@ internal class GitVersionExecutor(
         var warnings = violations.Count(v => v.Severity == SemanticViolationSeverity.Warning);
         var advisories = violations.Count(v => v.Severity == SemanticViolationSeverity.Advisory);
 
+        // Resolve provenance only when /explain is in effect; otherwise the
+        // text/JSON output shape is unchanged from the pre-Stack-4 contract.
+        var provenance = gitVersionOptions.ConfigurationInfo.ExplainProvenance
+            ? this.configurationProvider.ResolveProvenance()
+            : null;
+
         if (gitVersionOptions.Output.Contains(OutputType.Json))
         {
-            EmitJson(violations, errors, warnings, advisories);
+            EmitJson(violations, errors, warnings, advisories, provenance);
         }
         else
         {
-            EmitText(violations, errors, warnings, advisories);
+            EmitText(violations, errors, warnings, advisories, provenance);
         }
 
         return errors > 0 ? 1 : 0;
     }
 
-    private void EmitText(IReadOnlyList<SemanticViolation> violations, int errors, int warnings, int advisories)
+    /// <summary>
+    /// Maps each semantic rule to the field whose provenance most directly
+    /// explains the violation. Hardcoded against the rule catalogue so the
+    /// validator's <see cref="SemanticViolation"/> contract does not need to
+    /// expand. SEM-006 is the only root-level rule; the rest are branch-level
+    /// and report on a per-branch field.
+    /// </summary>
+    private static string? PrimaryFieldFor(string ruleId) => ruleId switch
+    {
+        "SEM-001" => "is-release-branch",
+        "SEM-002" => "source-branches",
+        "SEM-003" => "regex",
+        "SEM-004" => "mode",
+        "SEM-005" => "source-branches",
+        "SEM-006" => "strategies",
+        "SEM-007" => "source-branches",
+        _ => null
+    };
+
+    /// <summary>
+    /// Resolves the source of a (branchName, fieldName) pair against the
+    /// raw override dictionaries captured by <see cref="ConfigurationProvenance"/>.
+    /// Precedence is explicit and matches the merge order in
+    /// ConfigurationProvider.ProvideConfiguration: CLI override → file →
+    /// workflow → default. The first source that declares the field "wins".
+    /// </summary>
+    private static string ResolveSource(ConfigurationProvenance provenance, string? branchName, string? fieldName)
+    {
+        if (fieldName is null) return "from internal defaults";
+
+        if (HasField(provenance.FromCliOverride, branchName, fieldName))
+            return "set by /overrideconfig";
+        if (HasField(provenance.FromFile, branchName, fieldName))
+            return "set in your GitVersion.yml";
+        if (HasField(provenance.FromWorkflow, branchName, fieldName))
+            return $"inherited from workflow: {provenance.Workflow ?? "(unknown)"}";
+        return "from internal defaults";
+    }
+
+    private static bool HasField(IReadOnlyDictionary<string, object?>? source, string? branchName, string fieldName)
+    {
+        if (source is null) return false;
+
+        // Root-level field (branchName == null): look directly on the root.
+        if (branchName is null) return source.ContainsKey(fieldName);
+
+        // Branch-level field: navigate branches.<branchName>.<fieldName>.
+        if (!source.TryGetValue("branches", out var branchesObj)) return false;
+        if (branchesObj is not IDictionary<object, object?> branches) return false;
+        if (!branches.TryGetValue(branchName, out var branchObj)) return false;
+        if (branchObj is not IDictionary<object, object?> branch) return false;
+        return branch.ContainsKey(fieldName);
+    }
+
+    private void EmitText(IReadOnlyList<SemanticViolation> violations, int errors, int warnings, int advisories, ConfigurationProvenance? provenance)
     {
         this.console.WriteLine($"GitVersion Semantic Configuration Validator{FileSystemHelper.Path.NewLine}");
 
@@ -241,6 +301,13 @@ internal class GitVersionExecutor(
             this.console.WriteLine($"    {v.Title}");
             this.console.WriteLine($"    {v.Message}");
             this.console.WriteLine($"{FileSystemHelper.Path.NewLine}    Remediation: {v.Remediation}");
+            if (provenance is not null)
+            {
+                var field = PrimaryFieldFor(v.RuleId);
+                var source = ResolveSource(provenance, v.BranchName, field);
+                var fieldLabel = field is not null ? $"{field} " : string.Empty;
+                this.console.WriteLine($"    Source:      {fieldLabel}{source}");
+            }
             if (!string.IsNullOrEmpty(v.CausalNote))
                 this.console.WriteLine($"    Note: {v.CausalNote}");
             this.console.WriteLine(string.Empty);
@@ -264,26 +331,43 @@ internal class GitVersionExecutor(
         }
     }
 
-    private void EmitJson(IReadOnlyList<SemanticViolation> violations, int errors, int warnings, int advisories)
+    private void EmitJson(IReadOnlyList<SemanticViolation> violations, int errors, int warnings, int advisories, ConfigurationProvenance? provenance)
     {
+        // When /explain is in effect each violation gains a `source` object
+        // ({ field, origin }); otherwise the violation shape is unchanged from
+        // the pre-Stack-4 contract for backwards compatibility.
         var result = new
         {
             valid = errors == 0,
             summary = new { errors, warnings, advisories },
-            violations = violations.Select(v => new
+            violations = violations.Select(v =>
             {
-                ruleId = v.RuleId,
-                title = v.Title,
-                severity = v.Severity.ToString(),
-                branchName = v.BranchName,
-                message = v.Message,
-                remediation = v.Remediation,
-                causalNote = v.CausalNote
+                var field = provenance is not null ? PrimaryFieldFor(v.RuleId) : null;
+                var origin = provenance is not null ? ResolveSource(provenance, v.BranchName, field) : null;
+                return new
+                {
+                    ruleId = v.RuleId,
+                    title = v.Title,
+                    severity = v.Severity.ToString(),
+                    branchName = v.BranchName,
+                    message = v.Message,
+                    remediation = v.Remediation,
+                    causalNote = v.CausalNote,
+                    source = provenance is null ? null : new { field, origin }
+                };
             })
         };
 
         this.console.WriteLine(JsonSerializer.Serialize(result,
-            new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+            new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                // Omit null-valued properties so the `source` field appears
+                // only when /explain is in effect, preserving the pre-Stack-4
+                // JSON envelope shape for callers that do not opt in.
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            }));
     }
 
     private int RunGitVersionTool(GitVersionOptions gitVersionOptions)
