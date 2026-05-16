@@ -121,12 +121,17 @@ refinements which have been applied to the design note.
   API on `GitVersion.Configuration`; provider grows one method and one
   record, validator stays pure. _Landed `c28d2a838` on
   `feat/canonical-gitflow-adr001`; 12 new provenance unit tests pass._
-- [ ] **GV-IMP-004c**: Wire `RunValidation` to consume `ResolveProvenance`
+- [x] **GV-IMP-004c**: Wire `RunValidation` to consume `ResolveProvenance`
   when `ExplainProvenance` is set; emit `Source:` lines per violation
   using the precedence chain (CLI → file → workflow → default), with
   field-level lookup `(branchName, fieldName)`. Help text in
   `arguments.md`, `HelpWriterTests` lookup entry, in-process scenario
-  tests, subprocess wire test.
+  tests, subprocess wire test. _Landed `ef8ef278d` on
+  `feat/canonical-gitflow-adr001`; 12 new test methods (9 in-process
+  explain scenarios + 3 subprocess explain assertions). App.Tests at
+  291/291. JSON serialiser configured with `WhenWritingNull` so the
+  `source` field is omitted on the non-`/explain` path — backwards-compat
+  anchor test pins this._
 
 **Why three sub-commits:** mirrors the Stack 3 pattern. Each leaves the
 build green: 4a wires plumbing with no executor consumer, 4b adds the
