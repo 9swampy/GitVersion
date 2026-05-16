@@ -1,4 +1,23 @@
 #nullable enable
+GitVersion.Configuration.ConfigurationProvenance
+GitVersion.Configuration.ConfigurationProvenance.<Clone>$() -> GitVersion.Configuration.ConfigurationProvenance!
+GitVersion.Configuration.ConfigurationProvenance.ConfigurationProvenance(string? Workflow, System.Collections.Generic.IReadOnlyDictionary<string!, object?>? FromFile, System.Collections.Generic.IReadOnlyDictionary<string!, object?>? FromWorkflow, System.Collections.Generic.IReadOnlyDictionary<string!, object?>? FromCliOverride) -> void
+GitVersion.Configuration.ConfigurationProvenance.Deconstruct(out string? Workflow, out System.Collections.Generic.IReadOnlyDictionary<string!, object?>? FromFile, out System.Collections.Generic.IReadOnlyDictionary<string!, object?>? FromWorkflow, out System.Collections.Generic.IReadOnlyDictionary<string!, object?>? FromCliOverride) -> void
+GitVersion.Configuration.ConfigurationProvenance.Equals(GitVersion.Configuration.ConfigurationProvenance? other) -> bool
+GitVersion.Configuration.ConfigurationProvenance.FromCliOverride.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>?
+GitVersion.Configuration.ConfigurationProvenance.FromCliOverride.init -> void
+GitVersion.Configuration.ConfigurationProvenance.FromFile.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>?
+GitVersion.Configuration.ConfigurationProvenance.FromFile.init -> void
+GitVersion.Configuration.ConfigurationProvenance.FromWorkflow.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>?
+GitVersion.Configuration.ConfigurationProvenance.FromWorkflow.init -> void
+GitVersion.Configuration.ConfigurationProvenance.Workflow.get -> string?
+GitVersion.Configuration.ConfigurationProvenance.Workflow.init -> void
+GitVersion.Configuration.IConfigurationProvider.ResolveProvenance() -> GitVersion.Configuration.ConfigurationProvenance!
 GitVersion.ConfigurationInfo.ExplainProvenance -> bool
 GitVersion.ConfigurationInfo.SynthesiseConfiguration -> bool
 GitVersion.ConfigurationInfo.SynthesiseIntakeFile -> string?
+override GitVersion.Configuration.ConfigurationProvenance.Equals(object? obj) -> bool
+override GitVersion.Configuration.ConfigurationProvenance.GetHashCode() -> int
+override GitVersion.Configuration.ConfigurationProvenance.ToString() -> string!
+static GitVersion.Configuration.ConfigurationProvenance.operator !=(GitVersion.Configuration.ConfigurationProvenance? left, GitVersion.Configuration.ConfigurationProvenance? right) -> bool
+static GitVersion.Configuration.ConfigurationProvenance.operator ==(GitVersion.Configuration.ConfigurationProvenance? left, GitVersion.Configuration.ConfigurationProvenance? right) -> bool
