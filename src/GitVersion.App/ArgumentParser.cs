@@ -314,6 +314,12 @@ internal class ArgumentParser(IEnvironment environment,
             return true;
         }
 
+        if (name.IsSwitch("explain"))
+        {
+            arguments.ExplainProvenance = true;
+            return true;
+        }
+
         if (!name.IsSwitch("intake")) return false;
         EnsureArgumentValueCount(values);
         arguments.SynthesiseIntakeFile = value;

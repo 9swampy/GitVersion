@@ -1,3 +1,4 @@
 #nullable enable
+GitVersion.ConfigurationInfo.ExplainProvenance -> bool
 GitVersion.ConfigurationInfo.SynthesiseConfiguration -> bool
 GitVersion.ConfigurationInfo.SynthesiseIntakeFile -> string?

@@ -58,7 +58,12 @@ public class HelpWriterTests : TestBase
         var ignored = new[]
         {
             nameof(Arguments.Authentication),
-            nameof(Arguments.UpdateAssemblyInfoFileName)
+            nameof(Arguments.UpdateAssemblyInfoFileName),
+            // Stack 4 lands in stages: parser flag first (4a), provider surface
+            // next (4b), executor wiring + help text last (4c). The /explain
+            // entry in arguments.md and the AllArgsAreInHelp lookup land
+            // alongside the executor consumption.
+            nameof(Arguments.ExplainProvenance)
         };
         typeof(Arguments).GetFields()
             .Select(p => p.Name)

@@ -848,4 +848,24 @@ public class ArgumentParserTests : TestBase
 
         arguments.SynthesiseIntakeFile.ShouldBe("/tmp/intake.json");
     }
+
+    [Test]
+    public void ExplainSwitch_SetsExplainProvenanceFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/explain");
+
+        arguments.ExplainProvenance.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ExplainSwitch_AlongsideValidate_BothFlagsSet()
+    {
+        // /explain is a modifier on /validate per the Stack 4 design — verify
+        // it does not consume /validate as its value (the boolean-arguments
+        // list in ArgumentParserExtensions exists for exactly this reason).
+        var arguments = this.argumentParser.ParseArguments("/validate /explain");
+
+        arguments.ValidateConfig.ShouldBeTrue();
+        arguments.ExplainProvenance.ShouldBeTrue();
+    }
 }

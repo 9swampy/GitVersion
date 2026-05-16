@@ -24,6 +24,7 @@ internal class Arguments
     public bool ValidateConfig;
     public bool SynthesiseConfig;
     public string? SynthesiseIntakeFile;
+    public bool ExplainProvenance;
 
     public bool NoFetch;
     public bool NoCache;
@@ -69,7 +70,8 @@ internal class Arguments
                 ShowConfiguration = ShowConfiguration,
                 ValidateConfiguration = ValidateConfig,
                 SynthesiseConfiguration = SynthesiseConfig,
-                SynthesiseIntakeFile = SynthesiseIntakeFile
+                SynthesiseIntakeFile = SynthesiseIntakeFile,
+                ExplainProvenance = ExplainProvenance
             },
 
             RepositoryInfo =

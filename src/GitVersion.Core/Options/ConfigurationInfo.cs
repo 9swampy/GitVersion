@@ -7,5 +7,6 @@ public record ConfigurationInfo
     public bool ValidateConfiguration;
     public bool SynthesiseConfiguration;
     public string? SynthesiseIntakeFile;
+    public bool ExplainProvenance;
     public IReadOnlyDictionary<object, object?>? OverrideConfiguration;
 }
