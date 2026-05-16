@@ -113,22 +113,35 @@ inside the validator.
 
 ## Recommended implementation
 
+_Refined post-maintainer-review (2026-05-16). Five MUST-adjust corrections
+applied; rationales preserved at the end of this section per §C.5._
+
 ### Public-surface additions
 
 ```csharp
 // GitVersion.Configuration
 public sealed record ConfigurationProvenance(
     string? Workflow,
-    IReadOnlyDictionary<object, object?>? FromFile,
-    IReadOnlyDictionary<object, object?>? FromWorkflow,
-    IReadOnlyDictionary<object, object?>? FromCliOverride);
+    IReadOnlyDictionary<string, object?>? FromFile,
+    IReadOnlyDictionary<string, object?>? FromWorkflow,
+    IReadOnlyDictionary<string, object?>? FromCliOverride);
 
 public interface IConfigurationProvider
 {
     // (existing) IGitVersionConfiguration Provide(...);
-    ConfigurationProvenance ResolveProvenance(IReadOnlyDictionary<object, object?>? overrideConfiguration);
+    ConfigurationProvenance ResolveProvenance();
 }
 ```
+
+Two corrections from the initial draft:
+
+1. **`ResolveProvenance` takes no parameter.** The provider already owns
+   the CLI override via `IOptions<GitVersionOptions>`; passing it again
+   would duplicate responsibility and let callers diverge.
+2. **Dictionary keys are `string`, not `object`.** YAML-keyed dictionaries
+   in this codebase always use string keys at runtime; the `object` key
+   widens the type unnecessarily and would force runtime casts in the
+   executor's lookup path.
 
 ### Executor wiring
 
@@ -144,16 +157,41 @@ Parser adds `Arguments.ExplainProvenance`, ConfigurationInfo adds
 
 In `RunValidation`, when `gitVersionOptions.ConfigurationInfo.ExplainProvenance`
 is true:
-1. Call `configurationProvider.ResolveProvenance(overrideConfiguration)`
-   to get the raw dictionaries.
-2. For each `SemanticViolation`, attach an inferred provenance for the
-   branch family using `LookupBranchFieldSource(provenance, violation.BranchName)`:
-   - field present in `FromCliOverride.branches.<name>` → "set by /overrideconfig"
-   - field present in `FromFile.branches.<name>` → "set in your GitVersion.yml"
-   - field present in `FromWorkflow.branches.<name>` → "inherited from workflow: <name>"
-   - otherwise → "from internal defaults"
+1. Call `configurationProvider.ResolveProvenance()` to obtain the raw
+   dictionaries (no parameter — see correction above).
+2. For each `SemanticViolation`, derive the offending field name from
+   the violation (rule-specific mapping; SEM-001 → `is-release-branch`,
+   SEM-003 → `label`/`regex`, etc.). Look up the source of that
+   `(branchName, fieldName)` pair using the explicit precedence chain:
+
+   ```text
+   if CLI override has (branchName, fieldName)      → "set by /overrideconfig"
+   else if file has (branchName, fieldName)          → "set in your GitVersion.yml"
+   else if workflow has (branchName, fieldName)      → "inherited from workflow: <name>"
+   else                                              → "from internal defaults"
+   ```
+
+   The precedence chain is encoded as a single `LookupFieldSource`
+   helper internal to the executor — not inferred at each call site.
 3. Emit the provenance string alongside the existing remediation in
-   the text/JSON output.
+   the text/JSON output. Only the final source is shown in v1; "X
+   overridden by Y" multi-layer attribution is deferred to a future
+   iteration if a consumer demand surfaces.
+
+Three corrections from the initial draft:
+
+3. **Field-level lookup, not branch-level.** Different violations on the
+   same branch can have different provenances (e.g. SEM-001 fires
+   because `is-release-branch` was inherited from the workflow but
+   `regex` was overridden in the user's file). Lookups must take the
+   `(branchName, fieldName)` pair.
+4. **Precedence is explicit in code.** The chain CLI → file → workflow
+   → default is encoded in a single helper rather than inferred at
+   each call site. Same chain, same answer, every time.
+5. **"Internal defaults" is a fixed string label.** No deep
+   introspection of `ConfigurationBuilder`'s defaults; that path would
+   accidentally re-create Option A. The default case is a literal
+   string the user reads as "this is the engine default for the field."
 
 ### Output shape
 
@@ -200,23 +238,25 @@ don't pass `--explain` see the existing schema verbatim.
 Each leaves the build green if landed sequentially under the same
 discipline as Stack 3.
 
-## Open questions
+## Resolved questions (post-review)
 
-1. Should `--explain` imply `/validate`, or be a no-op without it? The
-   plan assumes the latter (modifier only).
-2. Where does the "from internal defaults" attribution come from? The
-   default-resolution path is in `ConfigurationBuilder.Build` — does
-   the merge dictionary capture this, or do we leave that case as a
-   bare "(default)" string? Recommend the latter for v1.
-3. Does the existing `/overrideconfig` parameter shape match the
-   dictionary structure the executor passes? Need to verify before 4b
-   wiring lands.
+1. **Does `--explain` imply `/validate`?** No — modifier only.
+   Preserves CLI consistency with `-output json` etc. and avoids
+   hidden behaviour.
+2. **Internal-defaults attribution?** Fixed string label "from
+   internal defaults". No introspection of `ConfigurationBuilder`
+   defaults (that path would re-create Option A).
+3. **`/overrideconfig` shape compatibility?** Validate during 4b
+   provider wiring, not pre-blocking. Confirmed correct sequencing.
 
-## Decision required from maintainer
+## Deferred to v2
 
-Before implementation begins:
-- (a) Approve Option C and the three-sub-commit shape; proceed to 4a.
-- (b) Reject Option C and request reconsideration of A or B.
-- (c) Defer Stack 4 entirely (keep this design note as the durable
-      record; mark in the plan checklist that the design pass concluded
-      with a deferral).
+- **Multi-layer attribution** ("inherited from X, overridden by Y").
+  v1 emits only the final source. A v2 enhancement is conceivable if a
+  consumer demand surfaces, but is explicitly out of scope here.
+
+## Decision
+
+**Maintainer approved Option C with five required refinements**
+(2026-05-16). Refinements applied to this design note above; ready to
+proceed to 4a (parser flag).
