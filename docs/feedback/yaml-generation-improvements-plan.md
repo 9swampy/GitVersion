@@ -101,30 +101,36 @@ dropped without disturbing Stacks 1 or 2.
 `src/GitVersion.App.Tests/SynthesiseCommand*.cs`,
 `docs/input/docs/usage/cli/arguments.md`.
 
-### Stack 4 — `/validate --explain` (design pass complete; implementation pending decision)
+### Stack 4 — `/validate --explain` (Option C, in flight)
 
-- [ ] **GV-IMP-004**: Design pass complete — see
-  [`.ai/design/stack-4-explain-design.md`](../../.ai/design/stack-4-explain-design.md).
-  Three approaches considered; Option C (dictionary-lookup against
-  `IConfigurationProvider.ResolveProvenance`) selected as the smallest
-  viable shape. Three sub-commits proposed: 4a parser flag, 4b provider
-  surface + provenance record, 4c executor wiring + tests + docs.
-  **Awaiting maintainer go/no-go.**
+Design pass: [`.ai/design/stack-4-explain-design.md`](../../.ai/design/stack-4-explain-design.md).
+Three approaches considered; Option C (dictionary-lookup against
+`IConfigurationProvider.ResolveProvenance`) selected as the smallest
+viable shape. Maintainer approved (2026-05-16) with five MUST-adjust
+refinements which have been applied to the design note.
 
-  The original deferral text below is preserved as historical context:
+- [x] **GV-IMP-004a**: Wire `/explain` modifier switch through the CLI
+  parser into `ConfigurationInfo.ExplainProvenance`. Parser tests
+  isolate the flag and exercise it alongside `/validate`.
+  `HelpWriterTests` temporarily ignores `ExplainProvenance`; help text
+  and lookup land in 004c when the feature is externally visible.
+  _Landed `df9b499ec` on `feat/canonical-gitflow-adr001`._
+- [ ] **GV-IMP-004b**: Add `IConfigurationProvider.ResolveProvenance()`
+  returning a `ConfigurationProvenance` record (workflow name + the
+  three raw override dictionaries from file/workflow/CLI). New public
+  API on `GitVersion.Configuration`; provider grows one method and one
+  record, validator stays pure.
+- [ ] **GV-IMP-004c**: Wire `RunValidation` to consume `ResolveProvenance`
+  when `ExplainProvenance` is set; emit `Source:` lines per violation
+  using the precedence chain (CLI → file → workflow → default), with
+  field-level lookup `(branchName, fieldName)`. Help text in
+  `arguments.md`, `HelpWriterTests` lookup entry, in-process scenario
+  tests, subprocess wire test.
 
-  > _The experience writeup asked
-  > for `/validate --explain` to show which preset fields pulled a branch
-  > into a contradictory state. Implementing this requires correlating the
-  > resolved configuration against the preset's contributions, which is a
-  > larger surface than the current validator's `IGitVersionConfiguration`
-  > input. Decision: classify and stage in a separate plan once Stack 3 is
-  > landed._
-
-**Why stack 4 last:** scope is now bounded by the design note's
-recommendation but the new public surface (`ConfigurationProvenance`
-record + provider method) crosses an abstraction boundary that warrants
-maintainer review before implementation begins.
+**Why three sub-commits:** mirrors the Stack 3 pattern. Each leaves the
+build green: 4a wires plumbing with no executor consumer, 4b adds the
+provider surface with no consumer, 4c brings them together with tests
+and externally-visible help.
 
 ## Out of branch scope
 
