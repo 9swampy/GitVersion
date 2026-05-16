@@ -296,8 +296,33 @@ internal class ArgumentParser(IEnvironment environment,
             return true;
         }
 
-        if (!name.IsSwitch("updatewixversionfile")) return false;
-        arguments.UpdateWixVersionFile = true;
+        if (name.IsSwitch("updatewixversionfile"))
+        {
+            arguments.UpdateWixVersionFile = true;
+            return true;
+        }
+
+        if (name.IsSwitch("validate"))
+        {
+            arguments.ValidateConfig = true;
+            return true;
+        }
+
+        if (name.IsSwitch("synthesise") || name.IsSwitch("synthesize"))
+        {
+            arguments.SynthesiseConfig = true;
+            return true;
+        }
+
+        if (name.IsSwitch("explain"))
+        {
+            arguments.ExplainProvenance = true;
+            return true;
+        }
+
+        if (!name.IsSwitch("intake")) return false;
+        EnsureArgumentValueCount(values);
+        arguments.SynthesiseIntakeFile = value;
         return true;
     }
 

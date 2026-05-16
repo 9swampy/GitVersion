@@ -34,6 +34,45 @@ internal class ConfigurationProvider(
             : ProvideForDirectory(null, overrideConfiguration);
     }
 
+    public ConfigurationProvenance ResolveProvenance()
+    {
+        var gitVersionOptions = this.options.Value;
+        var workingDirectory = gitVersionOptions.WorkingDirectory;
+        var projectRootDirectory = this.fileSystem.FindGitDir(workingDirectory)?.WorkingTreeDirectory;
+
+        var configurationFile = this.configFileLocator.GetConfigurationFile(workingDirectory)
+                             ?? this.configFileLocator.GetConfigurationFile(projectRootDirectory);
+
+        var fromFile = ReadOverrideConfiguration(configurationFile);
+        var fromCli = gitVersionOptions.ConfigurationInfo.OverrideConfiguration;
+        var workflow = GetWorkflow(fromCli, fromFile);
+        var fromWorkflow = WorkflowManager.GetOverrideConfiguration(workflow);
+
+        return new ConfigurationProvenance(
+            Workflow: workflow,
+            FromFile: NormaliseKeys(fromFile),
+            FromWorkflow: NormaliseKeys(fromWorkflow),
+            FromCliOverride: NormaliseKeys(fromCli));
+    }
+
+    /// <summary>
+    /// YAML deserialisation produces dictionaries keyed by <see cref="object"/>;
+    /// at runtime those keys are always strings. Cast at the top level so
+    /// <see cref="ConfigurationProvenance"/> exposes a typed contract; nested
+    /// values may themselves be dictionaries and remain typed as
+    /// <see cref="object"/> for the consumer to navigate.
+    /// </summary>
+    private static IReadOnlyDictionary<string, object?>? NormaliseKeys(IReadOnlyDictionary<object, object?>? source)
+    {
+        if (source is null) return null;
+        var result = new Dictionary<string, object?>(source.Count);
+        foreach (var (key, value) in source)
+        {
+            if (key is string s) result[s] = value;
+        }
+        return result;
+    }
+
     internal IGitVersionConfiguration ProvideForDirectory(string? workingDirectory,
                                                           IReadOnlyDictionary<object, object?>? overrideConfiguration = null)
     {

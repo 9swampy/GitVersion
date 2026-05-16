@@ -42,6 +42,10 @@ public class HelpWriterTests : TestBase
             { nameof(Arguments.ConfigurationFile), "/config" },
             { nameof(Arguments.ShowConfiguration), "/showconfig" },
             { nameof(Arguments.OverrideConfiguration), "/overrideconfig" },
+            { nameof(Arguments.ValidateConfig), "/validate" },
+            { nameof(Arguments.SynthesiseConfig), "/synthesise" },
+            { nameof(Arguments.SynthesiseIntakeFile), "/intake" },
+            { nameof(Arguments.ExplainProvenance), "/explain" },
 
             { nameof(Arguments.NoCache), "/nocache" },
             { nameof(Arguments.NoFetch), "/nofetch" },

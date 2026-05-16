@@ -816,4 +816,56 @@ public class ArgumentParserTests : TestBase
         arguments.ConfigurationFile.ShouldBe(configFile);
         this.fileSystem.File.Delete(configFile);
     }
+
+    [Test]
+    public void ValidateSwitch_SetsValidateConfigFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/validate");
+
+        arguments.ValidateConfig.ShouldBeTrue();
+    }
+
+    [Test]
+    public void SynthesiseSwitch_SetsSynthesiseConfigFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/synthesise");
+
+        arguments.SynthesiseConfig.ShouldBeTrue();
+    }
+
+    [Test]
+    public void SynthesizeSwitch_AmericanSpelling_AlsoSetsSynthesiseConfigFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/synthesize");
+
+        arguments.SynthesiseConfig.ShouldBeTrue();
+    }
+
+    [Test]
+    public void IntakeSwitch_SetsSynthesiseIntakeFilePath()
+    {
+        var arguments = this.argumentParser.ParseArguments("/intake /tmp/intake.json");
+
+        arguments.SynthesiseIntakeFile.ShouldBe("/tmp/intake.json");
+    }
+
+    [Test]
+    public void ExplainSwitch_SetsExplainProvenanceFlag()
+    {
+        var arguments = this.argumentParser.ParseArguments("/explain");
+
+        arguments.ExplainProvenance.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ExplainSwitch_AlongsideValidate_BothFlagsSet()
+    {
+        // /explain is a modifier on /validate per the Stack 4 design — verify
+        // it does not consume /validate as its value (the boolean-arguments
+        // list in ArgumentParserExtensions exists for exactly this reason).
+        var arguments = this.argumentParser.ParseArguments("/validate /explain");
+
+        arguments.ValidateConfig.ShouldBeTrue();
+        arguments.ExplainProvenance.ShouldBeTrue();
+    }
 }

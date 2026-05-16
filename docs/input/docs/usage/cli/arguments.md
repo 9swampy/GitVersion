@@ -46,6 +46,40 @@ GitVersion [path]
     /config         Path to config file (defaults to GitVersion.yml, GitVersion.yaml, .GitVersion.yml or .GitVersion.yaml)
     /showconfig     Outputs the effective GitVersion config (defaults + custom
                     from GitVersion.yml, GitVersion.yaml, .GitVersion.yml or .GitVersion.yaml) in yaml format
+    /validate       Validates the GitVersion configuration file against the
+                    semantic rule catalogue without computing a version.
+                    Mutually exclusive with normal version calculation — no
+                    version variables are produced when specified.
+                    Does not require a git repository.
+                    Exit code 0 = valid (warnings and advisories do not block).
+                    Exit code 1 = one or more errors found.
+                    Use /output json for machine-readable output.
+                    Use /config to specify a non-default config file path.
+                    Use /explain to surface which source supplied each
+                    offending field.
+    /explain        Modifier for /validate. Adds a Source: line to each
+                    violation naming the field most directly responsible
+                    and the source that supplied it (preset workflow,
+                    your GitVersion.yml, /overrideconfig, or internal
+                    defaults). In JSON mode each violation gains a
+                    source: { field, origin } object. No effect when
+                    used without /validate.
+    /synthesise     Generates a minimal GitVersion.yml from a JSON intake
+                    file declaring branch patterns paired with version
+                    examples. Mutually exclusive with normal version
+                    calculation. Does not require a git repository.
+                    Requires /intake <path>. /synthesize is an accepted
+                    alias for the US spelling.
+                    Exit code 0 = YAML written to stdout.
+                    Exit code 1 = intake malformed, missing, or
+                    under-determined (an F-001 through F-005 diagnostic
+                    is emitted instead).
+                    Use /output json for {"yaml": "...", "diagnostics": [...]}
+                    output suitable for CI pipelines.
+    /intake         Path to the JSON intake file for /synthesise. The file
+                    declares an incrementSource (BranchName, TagOnly,
+                    CommitMessage, or BranchNameAndCommitMessage) and a
+                    branches array of {pattern, example} pairs.
     /overrideconfig Overrides GitVersion config values inline (semicolon-
                     separated key value pairs e.g. /overrideconfig
                     tag-prefix=Foo)
