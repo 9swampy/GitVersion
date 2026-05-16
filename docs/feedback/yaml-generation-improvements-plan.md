@@ -115,11 +115,12 @@ refinements which have been applied to the design note.
   `HelpWriterTests` temporarily ignores `ExplainProvenance`; help text
   and lookup land in 004c when the feature is externally visible.
   _Landed `df9b499ec` on `feat/canonical-gitflow-adr001`._
-- [ ] **GV-IMP-004b**: Add `IConfigurationProvider.ResolveProvenance()`
+- [x] **GV-IMP-004b**: Add `IConfigurationProvider.ResolveProvenance()`
   returning a `ConfigurationProvenance` record (workflow name + the
   three raw override dictionaries from file/workflow/CLI). New public
   API on `GitVersion.Configuration`; provider grows one method and one
-  record, validator stays pure.
+  record, validator stays pure. _Landed `c28d2a838` on
+  `feat/canonical-gitflow-adr001`; 12 new provenance unit tests pass._
 - [ ] **GV-IMP-004c**: Wire `RunValidation` to consume `ResolveProvenance`
   when `ExplainProvenance` is set; emit `Source:` lines per violation
   using the precedence chain (CLI → file → workflow → default), with
